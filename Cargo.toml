@@ -3,5 +3,6 @@
 name = "qmlrs"
 version = "0.0.1"
 authors = ["Mikko Perttunen <cyndis@kapsi.fi>"]
+license = "MIT/Apache-2.0"
 
 build = "build.rs"
