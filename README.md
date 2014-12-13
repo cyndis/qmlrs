@@ -52,3 +52,8 @@ on. For this reason, `View`s are `NoSend`. However, you can create sendable hand
 method (the name "handle" probably should change). Handles have built-in logic to allow invoking
 Qml methods from other threads, but they will not keep the `View` alive. Method calls will return
 an error if the underlying `View` has been destroyed.
+
+## Licensing
+
+The code in this library is licensed under both the MIT license and the Apache License (version 2.0).
+See LICENSE-APACHE and LICENSE-MIT for details.
