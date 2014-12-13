@@ -13,7 +13,12 @@ fn main() {
 
     let out = Command::new("cmake").arg("..").output();
     if out.unwrap().status != std::io::process::ProcessExit::ExitStatus(0) {
-        panic!("Build failed");
+        panic!("Failed to run cmake");
+    }
+
+    let out = Command::new("make").output();
+    if out.unwrap().status != std::io::process::ProcessExit::ExitStatus(0) {
+        panic!("Failed to run make");
     }
 
     println!("cargo:rustc-flags=-L ext/libqmlrswrapper/build -l qmlrswrapper -l Qt5Core -l Qt5Quick -l Qt5Gui -l Qt5Qml -l stdc++");
