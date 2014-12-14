@@ -178,6 +178,10 @@ impl Handle {
                 None    => { qmlrs_variant_destroy(result); return Err("View has been freed") }
             }
 
+            for v in c_args.into_iter() {
+                qmlrs_variant_destroy(v as *mut QVariant);
+            }
+
             let ret = Variant::get_from(result as *const QVariant);
             qmlrs_variant_destroy(result);
 

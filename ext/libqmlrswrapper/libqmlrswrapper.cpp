@@ -38,8 +38,8 @@ rust_fun void qmlrs_view_show(QrsView *view) {
 }
 
 rust_fun void qmlrs_view_invoke(QrsView *view, const char *method, QVariant *result,
-                                unsigned int n_args, QVariant const * const * const r_args
-) {
+                                unsigned int n_args, QVariant const * const * const r_args)
+{
     if (n_args > 10) {
         qFatal("Cannot invoke method with more than 10 arguments");
     }
