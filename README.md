@@ -1,4 +1,4 @@
-# qmlrs - A QtQuick interface for Rust
+# qmlrs - QtQuick bindings for Rust
 
 qmlrs allows the use of Qml/QtQuick code from Rust, specifically
 
