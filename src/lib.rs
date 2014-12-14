@@ -7,8 +7,9 @@ use std::sync::{Arc, Weak};
 use std::collections::HashMap;
 use std::cell::UnsafeCell;
 use std::c_str::CString;
+use std::borrow::ToOwned;
 
-enum QQuickView {}
+enum QrsEngine {}
 enum QVariant {}
 
 #[repr(C)]
@@ -19,15 +20,14 @@ enum QrsVariantType {
 }
 
 extern "C" {
-    fn qmlrs_create_view() -> *mut QQuickView;
-    fn qmlrs_destroy_view(view: *mut QQuickView);
-    fn qmlrs_view_set_source(view: *mut QQuickView, path: *const c_char, len: c_uint);
-    fn qmlrs_view_show(view: *mut QQuickView);
-    fn qmlrs_view_invoke(view: *mut QQuickView, method: *const c_char, result: *mut QVariant,
-                         n_args: c_uint, r_args: *const *const QVariant);
-    fn qmlrs_view_set_slot_function(view: *mut QQuickView,
-                                    fun: extern "C" fn(*const c_char, *mut c_void, *mut QVariant),
-                                    data: *mut c_void);
+    fn qmlrs_create_engine() -> *mut QrsEngine;
+    fn qmlrs_destroy_engine(engine: *mut QrsEngine);
+    fn qmlrs_engine_load_url(engine: *mut QrsEngine, path: *const c_char, len: c_uint);
+    fn qmlrs_engine_invoke(engine: *mut QrsEngine, method: *const c_char, result: *mut QVariant,
+                           n_args: c_uint, r_args: *const *const QVariant);
+    fn qmlrs_engine_set_slot_function(engine: *mut QrsEngine,
+                                      fun: extern "C" fn(*const c_char, *mut c_void, *mut QVariant),
+                                      data: *mut c_void);
 
     fn qmlrs_variant_create() -> *mut QVariant;
     fn qmlrs_variant_destroy(v: *mut QVariant);
@@ -71,26 +71,26 @@ impl Variant {
 
 pub type Slot = Box<FnMut<(),Variant> + 'static>;
 
-struct ViewInternal {
-    p: *mut QQuickView,
+struct EngineInternal {
+    p: *mut QrsEngine,
     slots: UnsafeCell<HashMap<String, Slot>>
 }
 
-impl Drop for ViewInternal {
+impl Drop for EngineInternal {
     fn drop(&mut self) {
-        unsafe { qmlrs_destroy_view(self.p); }
+        unsafe { qmlrs_destroy_engine(self.p); }
     }
 }
 
-pub struct View {
+pub struct Engine {
     nosend: ::std::kinds::marker::NoSend,
-    i: Arc<ViewInternal>
+    i: Arc<EngineInternal>
 }
 
 extern "C" fn slot_fun(slot: *const c_char, data: *mut c_void, result: *mut QVariant) {
-    /* ViewInternal must be alive here, since the Qml context is alive */
+    /* EngineInternal must be alive here, since the Qml context is alive */
 
-    let i: &ViewInternal = unsafe { std::mem::transmute(data) };
+    let i: &EngineInternal = unsafe { std::mem::transmute(data) };
     let cstr = unsafe { CString::new(slot, false) };
 
     unsafe {
@@ -105,42 +105,36 @@ extern "C" fn slot_fun(slot: *const c_char, data: *mut c_void, result: *mut QVar
     }
 }
 
-impl View {
-    pub fn new() -> View {
-        let p = unsafe { qmlrs_create_view() };
+impl Engine {
+    pub fn new() -> Engine {
+        let p = unsafe { qmlrs_create_engine() };
         assert!(p.is_not_null());
 
-        let i = Arc::new(ViewInternal {
+        let i = Arc::new(EngineInternal {
             p: p,
             slots: UnsafeCell::new(HashMap::new())
         });
 
         unsafe {
-            qmlrs_view_set_slot_function(p, slot_fun, i.deref() as *const ViewInternal
+            qmlrs_engine_set_slot_function(p, slot_fun, i.deref() as *const EngineInternal
                                                                 as *mut c_void);
         }
 
-        View {
+        Engine {
             nosend: ::std::kinds::marker::NoSend,
             i: i
         }
     }
 
-    pub fn set_source(&mut self, path: &str) {
+    pub fn load_url(&mut self, path: &str) {
         unsafe {
-            qmlrs_view_set_source(self.i.p, path.as_ptr() as *const c_char, path.len() as c_uint);
+            qmlrs_engine_load_url(self.i.p, path.as_ptr() as *const c_char, path.len() as c_uint);
         }
     }
 
-    pub fn show(&mut self) {
+    pub fn register_slot<Sized? S: ToOwned<String>>(&mut self, name: &S, slot: Slot) {
         unsafe {
-            qmlrs_view_show(self.i.p);
-        }
-    }
-
-    pub fn register_slot(&mut self, name: String, slot: Slot) {
-        unsafe {
-            (*self.i.slots.get()).insert(name, slot);
+            (*self.i.slots.get()).insert(name.to_owned(), slot);
         }
     }
 
@@ -154,7 +148,7 @@ impl View {
 }
 
 pub struct Handle {
-    i: Weak<ViewInternal>
+    i: Weak<EngineInternal>
 }
 
 impl Handle {
@@ -173,7 +167,7 @@ impl Handle {
             assert!(result.is_not_null());
 
             match self.i.upgrade() {
-                Some(i) => qmlrs_view_invoke(i.p, cstr.as_ptr(), result,
+                Some(i) => qmlrs_engine_invoke(i.p, cstr.as_ptr(), result,
                                              c_args.len() as c_uint, c_args.as_ptr()),
                 None    => { qmlrs_variant_destroy(result); return Err("View has been freed") }
             }

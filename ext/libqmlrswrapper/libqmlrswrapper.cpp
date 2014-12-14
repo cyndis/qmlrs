@@ -5,11 +5,7 @@
 
 #define rust_fun extern "C"
 
-rust_fun int hello() {
-    return 42;
-}
-
-rust_fun QrsView *qmlrs_create_view() {
+rust_fun QrsApplicationEngine *qmlrs_create_engine() {
     if (!QGuiApplication::instance()) {
         char *arg = (char *)malloc(13);
         strcpy(arg, "qmlrswrapper");
@@ -22,23 +18,20 @@ rust_fun QrsView *qmlrs_create_view() {
         new QGuiApplication(*argc, argp);
     }
     
-    return new QrsView();
+    return new QrsApplicationEngine();
 }
 
-rust_fun void qmlrs_destroy_view(QrsView *view) {
-    delete view;
+rust_fun void qmlrs_destroy_engine(QrsApplicationEngine *engine) {
+    delete engine;
 }
 
-rust_fun void qmlrs_view_set_source(QrsView *view, const char *path, unsigned int len) {
-    view->setSource(QString::fromUtf8(path, len));
+rust_fun void qmlrs_engine_load_url(QrsApplicationEngine *engine, const char *path, unsigned int len) {
+    engine->load(QUrl(QString::fromUtf8(path, len)));
 }
 
-rust_fun void qmlrs_view_show(QrsView *view) {
-    view->show();
-}
-
-rust_fun void qmlrs_view_invoke(QrsView *view, const char *method, QVariant *result,
-                                unsigned int n_args, QVariant const * const * const r_args)
+rust_fun void qmlrs_engine_invoke(QrsApplicationEngine *engine, const char *method, 
+                                  QVariant *result, unsigned int n_args, 
+                                  QVariant const * const * const r_args)
 {
     if (n_args > 10) {
         qFatal("Cannot invoke method with more than 10 arguments");
@@ -48,17 +41,17 @@ rust_fun void qmlrs_view_invoke(QrsView *view, const char *method, QVariant *res
     for (unsigned int i = 0; i < n_args; ++i)
         args.append(*r_args[i]);
     QVariant returned;
-    QMetaObject::invokeMethod(view, "invokeQmlSlot", Q_RETURN_ARG(QVariant, returned), 
+    QMetaObject::invokeMethod(engine, "invokeQmlSlot", Q_RETURN_ARG(QVariant, returned), 
                               Q_ARG(QString, QString::fromUtf8(method)), Q_ARG(QVariantList, args));
     *result = returned;
 }
 
-rust_fun void qmlrs_view_set_slot_function(QrsView *view, 
-                                           void (*fun)(const char *name, void *data, QVariant *result),
-                                           void *data)
+rust_fun void qmlrs_engine_set_slot_function(QrsApplicationEngine *engine, 
+                                             void (*fun)(const char *name, void *data, QVariant *result),
+                                             void *data)
 {
-    view->slot_fun = fun;
-    view->slot_data = data;
+    engine->slot_fun = fun;
+    engine->slot_data = data;
 }
 
 rust_fun void qmlrs_app_exec() {
@@ -100,14 +93,14 @@ rust_fun void qmlrs_variant_get_int(const QVariant *v, int *x) {
     *x = v->toInt();
 }
 
-QrsView::QrsView()
+QrsApplicationEngine::QrsApplicationEngine()
 : slot_fun(NULL), slot_data(NULL)
 {
     rootContext()->setContextProperty("qmlrs", new QrsInterface(this));
 }
 
-QVariant QrsView::invokeQmlSlot(QString name, QVariantList args) {
-    QObject *root = rootObject();
+QVariant QrsApplicationEngine::invokeQmlSlot(QString name, QVariantList args) {
+    QObject *root = rootObjects().first();
     
     QVariant returned;
     
@@ -131,9 +124,9 @@ QVariant QrsView::invokeQmlSlot(QString name, QVariantList args) {
 
 QVariant QrsInterface::invoke(QString event)
 {
-    if (_view->slot_fun) {
+    if (_engine->slot_fun) {
         QVariant v;
-        _view->slot_fun(event.toUtf8(), _view->slot_data, &v);
+        _engine->slot_fun(event.toUtf8(), _engine->slot_data, &v);
         return v;
     } else {
         qWarning("QML side slot called but Rust slot handler not registered");

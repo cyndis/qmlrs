@@ -5,11 +5,11 @@
 
 class QrsInterface;
 
-class QrsView : public QQuickView {
+class QrsApplicationEngine : public QQmlApplicationEngine {
     Q_OBJECT
     
 public:
-    QrsView();
+    QrsApplicationEngine();
     
     void (*slot_fun)(const char *, void *, QVariant *);
     void *slot_data;
@@ -22,14 +22,14 @@ class QrsInterface : public QObject {
     Q_OBJECT
     
 public:
-    QrsInterface(QrsView *view) : _view(view)
+    QrsInterface(QrsApplicationEngine *engine) : _engine(engine)
     { }
     
 public slots:
     QVariant invoke(QString event);
     
 private:
-    QrsView *_view;
+    QrsApplicationEngine *_engine;
 };
 
 #endif // libqmlrswrapper_H
