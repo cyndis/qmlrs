@@ -2,7 +2,7 @@
 
 qmlrs allows the use of Qml/QtQuick code from Rust, specifically
 
-- Rust code can create a QtQuick window with a loaded Qml script
+- Rust code can create a QtQuick engine (QQmlApplicationEngine) with a loaded Qml script
 - Rust code can invoke Qml functions
 - Qml code can invoke Rust functions
 
@@ -26,14 +26,15 @@ extern crate qmlrs;
 
 #[allow(unused_must_use)]
 fn main() {
-    let mut view = qmlrs::View::new();
+    let mut view = qmlrs::Engine::new();
 
-    view.set_source("file:///home/cyndis/src/qmlrs/examples/hello.qml");
-    view.show();
+    view.load_url("file:///home/cyndis/src/qmlrs/examples/hello.qml");
 
     let handle = view.handle();
-    view.register_slot("hello".into_string(), box move || {
-        handle.invoke("hello");
+    view.register_slot("hello", box move || {
+        let foo = handle.invoke("hello", &[qmlrs::Variant::Int(555)]).unwrap();
+        println!("QML hello slot returned: {}", foo);
+        qmlrs::Variant::Int(42)
     });
 
     view.exec();
@@ -42,16 +43,16 @@ fn main() {
 
 ## Note regarding the Qt event loop and threads
 
-Creating a `View` automatically initializes the Qt main event loop is one doesn't already exist.
+Creating an `Engine` automatically initializes the Qt main event loop if one doesn't already exist.
 At least on some operating systems, the event loop must run on the main thread. Qt will tell you
 if you mess up. The `.exec()` method on views starts the event loop. This will block the thread
 until the window is closed.
 
 Qt objects have a thread affinity, and their methods must be called on the thread they were created
-on. For this reason, `View`s are `NoSend`. However, you can create sendable handles using the `.handle()`
+on. For this reason, `Engine`s are `NoSend`. However, you can create sendable handles using the `.handle()`
 method (the name "handle" probably should change). Handles have built-in logic to allow invoking
-Qml methods from other threads, but they will not keep the `View` alive. Method calls will return
-an error if the underlying `View` has been destroyed.
+Qml methods from other threads, but they will not keep the `Engine` alive. Method calls will return
+an error if the underlying `Engine` has been destroyed.
 
 ## Licensing
 
