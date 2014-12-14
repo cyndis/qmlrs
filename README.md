@@ -9,8 +9,7 @@ qmlrs allows the use of Qml/QtQuick code from Rust, specifically
 - Qml code can invoke Rust functions
 
 ..with certain limitations. This is currently still proof-of-concept
-level code; the interfaces could probably use some improvement. Method parameters
-in either direction are also not supported.
+level code; the interfaces could probably use some improvement.
 The library should be safe (as in not `unsafe`) to use, but no promises.
 
 ## Requirements
