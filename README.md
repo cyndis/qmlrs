@@ -1,5 +1,7 @@
 # qmlrs - QtQuick bindings for Rust
 
+![Image of example](https://raw.githubusercontent.com/cyndis/qmlrs/ghstatic/screenshot.png)
+
 qmlrs allows the use of Qml/QtQuick code from Rust, specifically
 
 - Rust code can create a QtQuick engine (QQmlApplicationEngine) with a loaded Qml script
