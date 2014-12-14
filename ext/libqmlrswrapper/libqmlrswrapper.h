@@ -11,11 +11,11 @@ class QrsView : public QQuickView {
 public:
     QrsView();
     
-    void (*slot_fun)(const char *, void *);
+    void (*slot_fun)(const char *, void *, QVariant *);
     void *slot_data;
     
 public slots:
-    void invokeQmlSlot(QString name);
+    QVariant invokeQmlSlot(QString name, QVariantList args);
 };
 
 class QrsInterface : public QObject {

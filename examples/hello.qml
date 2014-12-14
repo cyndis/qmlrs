@@ -15,13 +15,20 @@ Item {
 
   property int times: 0
 
-  function hello() {
+  function hello(x) {
     times += 1;
+
+    console.log("QML hello was called with " + x);
+
+    return 123;
   }
 
   MouseArea {
     anchors.fill: parent
 
-    onClicked: qmlrs.invoke("hello")
+    onClicked: {
+      var x = qmlrs.invoke("hello");
+      console.log("QmlRS call returned " + x);
+    }
   }
 }

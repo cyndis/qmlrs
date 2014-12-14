@@ -9,7 +9,9 @@ fn main() {
 
     let handle = view.handle();
     view.register_slot("hello".into_string(), box move || {
-        handle.invoke("hello");
+        let foo = handle.invoke("hello", &[qmlrs::Variant::Int(555)]).unwrap();
+        println!("QML hello slot returned: {}", foo);
+        qmlrs::Variant::Int(42)
     });
 
     view.exec();
