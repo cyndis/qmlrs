@@ -30,28 +30,45 @@ rust_fun void qmlrs_engine_load_url(QrsApplicationEngine *engine, const char *pa
 }
 
 rust_fun void qmlrs_engine_invoke(QrsApplicationEngine *engine, const char *method, 
-                                  QVariant *result, unsigned int n_args, 
-                                  QVariant const * const * const r_args)
+                                  QVariant *result, const QVariantList *args)
 {
-    if (n_args > 10) {
+    if (args->size() > 10) {
         qFatal("Cannot invoke method with more than 10 arguments");
     }
     
-    QVariantList args;
-    for (unsigned int i = 0; i < n_args; ++i)
-        args.append(*r_args[i]);
     QVariant returned;
     QMetaObject::invokeMethod(engine, "invokeQmlSlot", Q_RETURN_ARG(QVariant, returned), 
-                              Q_ARG(QString, QString::fromUtf8(method)), Q_ARG(QVariantList, args));
+                              Q_ARG(QString, QString::fromUtf8(method)),
+                              Q_ARG(QVariantList, *args));
     *result = returned;
 }
 
-rust_fun void qmlrs_engine_set_slot_function(QrsApplicationEngine *engine, 
-                                             void (*fun)(const char *name, void *data, QVariant *result),
+rust_fun void qmlrs_engine_set_slot_function(QrsApplicationEngine *engine, QrsSlotFun fun, 
                                              void *data)
 {
     engine->slot_fun = fun;
     engine->slot_data = data;
+}
+
+rust_fun QVariantList *qmlrs_varlist_create() {
+    return new QVariantList();
+}
+
+rust_fun void qmlrs_varlist_destroy(QVariantList *list) {
+    delete list;
+}
+
+rust_fun QVariant *qmlrs_varlist_push(QVariantList *list) {
+    list->append(QVariant());
+    return (QVariant *)&list->last();
+}
+
+rust_fun unsigned int qmlrs_varlist_length(const QVariantList *list) {
+    return list->size();
+}
+
+rust_fun QVariant *qmlrs_varlist_get(const QVariantList *list, unsigned int i) {
+    return (QVariant *)&(*list)[i];
 }
 
 rust_fun void qmlrs_app_exec() {
@@ -122,11 +139,11 @@ QVariant QrsApplicationEngine::invokeQmlSlot(QString name, QVariantList args) {
     return returned;
 }
 
-QVariant QrsInterface::invoke(QString event)
+QVariant QrsInterface::invoke(QString event, QVariantList args)
 {
     if (_engine->slot_fun) {
         QVariant v;
-        _engine->slot_fun(event.toUtf8(), _engine->slot_data, &v);
+        _engine->slot_fun(event.toUtf8(), _engine->slot_data, &v, &args);
         return v;
     } else {
         qWarning("QML side slot called but Rust slot handler not registered");

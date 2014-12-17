@@ -29,7 +29,7 @@ ApplicationWindow {
       Layout.fillWidth: true
 
       onClicked: {
-        var x = qmlrs.invoke("hello");
+        var x = qmlrs.invoke("hello", [1,2,3]);
         console.log("QmlRS call returned " + x);
       }
     }

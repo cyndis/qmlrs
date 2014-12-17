@@ -3,6 +3,8 @@
 
 #include <QtQuick>
 
+typedef void *(QrsSlotFun)(const char *name, void *data, QVariant *result, QVariantList *args);
+
 class QrsInterface;
 
 class QrsApplicationEngine : public QQmlApplicationEngine {
@@ -11,11 +13,14 @@ class QrsApplicationEngine : public QQmlApplicationEngine {
 public:
     QrsApplicationEngine();
     
-    void (*slot_fun)(const char *, void *, QVariant *);
+    QrsSlotFun *slot_fun;
     void *slot_data;
     
 public slots:
     QVariant invokeQmlSlot(QString name, QVariantList args);
+    
+private:
+    QrsInterface *_interface;
 };
 
 class QrsInterface : public QObject {
@@ -26,7 +31,7 @@ public:
     { }
     
 public slots:
-    QVariant invoke(QString event);
+    QVariant invoke(QString event, QVariantList args);
     
 private:
     QrsApplicationEngine *_engine;
