@@ -8,9 +8,7 @@ qmlrs allows the use of Qml/QtQuick code from Rust, specifically
 - Rust code can invoke Qml functions
 - Qml code can invoke Rust functions
 
-..with certain limitations. This is currently still proof-of-concept
-level code; the interfaces could probably use some improvement.
-The library should be safe (as in not `unsafe`) to use, but no promises.
+..with certain limitations. The library should be safe (as in not `unsafe`) to use, but no promises.
 
 ## Requirements
 
@@ -19,26 +17,34 @@ when building with Cargo. You will need `cmake`, Qt5 and a C++ compiler that can
 
 ## Example
 
-This is the Rust code for an application showing a window with some text that can be changed by
-clicking. You can find the corresponding Qml code in the `examples` directory.
+This is the Rust code for an application allowing the calculation of factorials.
+You can find the corresponding Qml code in the `examples` directory.
 
 ```rust
 extern crate qmlrs;
 
-#[allow(unused_must_use)]
+fn factorial(x: int) -> int {
+    std::iter::range_inclusive(1, x).fold(1, |t,c| t * c)
+}
+
 fn main() {
-    let mut view = qmlrs::Engine::new();
+    let mut engine = qmlrs::Engine::new();
 
-    view.load_url("file:///home/cyndis/src/qmlrs/examples/hello.qml");
+    let mut path = std::os::getcwd().unwrap();
+    path.push_many(&["examples", "factorial_ui.qml"]);
+    path = std::os::make_absolute(&path).unwrap();
 
-    let handle = view.handle();
-    view.register_slot("hello", box move || {
-        let foo = handle.invoke("hello", &[qmlrs::Variant::Int(555)]).unwrap();
-        println!("QML hello slot returned: {}", foo);
-        qmlrs::Variant::Int(42)
+    engine.load_url(format!("file://{}", path.display()).as_slice());
+
+    engine.register_slot("calculate", box move |args| {
+        if let qmlrs::Variant::Int(x) = args[0] {
+            qmlrs::Variant::Int(factorial(x))
+        } else {
+            qmlrs::Variant::Invalid
+        }
     });
 
-    view.exec();
+    engine.exec();
 }
 ```
 
