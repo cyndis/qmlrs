@@ -85,6 +85,7 @@ impl Variant {
 
                     let mut data: Vec<u8> = Vec::with_capacity(len as uint);
                     qmlrs_variant_get_string_data(var, data.as_mut_ptr() as *mut c_char);
+                    data.set_len(len as uint);
 
                     Variant::String(String::from_utf8_unchecked(data))
                 }
