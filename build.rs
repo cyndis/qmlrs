@@ -21,5 +21,5 @@ fn main() {
         panic!("Failed to run make");
     }
 
-    println!("cargo:rustc-flags=-L ext/libqmlrswrapper/build -l qmlrswrapper -l Qt5Core -l Qt5Quick -l Qt5Gui -l Qt5Qml -l stdc++");
+    println!("cargo:rustc-flags=-L {} -l qmlrswrapper:static -l Qt5Core -l Qt5Quick -l Qt5Gui -l Qt5Qml -l stdc++", build.display());
 }
