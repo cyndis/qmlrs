@@ -103,11 +103,11 @@ rust_fun QrsVariantType qmlrs_variant_get_type(const QVariant *v) {
     if (!v->isValid())
         return Invalid;
     
+    if (v->type() == (QVariant::Type)QMetaType::QString)
+        return String;
+
     if (v->canConvert(QMetaType::Int))
         return Int;
-    
-    if (v->canConvert(QMetaType::QString))
-        return String;
     
     /* Unknown type, not supported on Rust side */
     return Invalid;
