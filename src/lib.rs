@@ -17,7 +17,8 @@ enum QVariantList {}
 #[deriving(Eq, PartialEq, Show, Copy)]
 enum QrsVariantType {
     Invalid = 0,
-    Int
+    Int,
+    String
 }
 
 extern "C" {
@@ -35,8 +36,11 @@ extern "C" {
     fn qmlrs_variant_destroy(v: *mut QVariant);
     fn qmlrs_variant_set_int(var: *mut QVariant, x: c_int);
     fn qmlrs_variant_set_invalid(var: *mut QVariant);
+    fn qmlrs_variant_set_string(var: *mut QVariant, len: c_uint, data: *const c_char);
     fn qmlrs_variant_get_type(var: *const QVariant) -> QrsVariantType;
     fn qmlrs_variant_get_int(var: *const QVariant, x: *mut c_int);
+    fn qmlrs_variant_get_string_length(var: *const QVariant, out: *mut c_uint);
+    fn qmlrs_variant_get_string_data(var: *const QVariant, out: *mut c_char);
 
     fn qmlrs_varlist_create() -> *mut QVariantList;
     fn qmlrs_varlist_destroy(list: *mut QVariantList);
@@ -47,18 +51,21 @@ extern "C" {
     fn qmlrs_app_exec();
 }
 
-#[deriving(Eq, PartialEq, Show, Copy)]
+#[deriving(Eq, PartialEq, Show)]
 pub enum Variant {
     Invalid,
-    Int(int)
+    Int(int),
+    String(String)
 }
 
 impl Variant {
-    fn set_into(self, var: *mut QVariant) {
+    fn set_into(&self, var: *mut QVariant) {
         unsafe {
-            match self {
+            match *self {
                 Variant::Invalid => qmlrs_variant_set_invalid(var),
-                Variant::Int(x) => qmlrs_variant_set_int(var, x as c_int)
+                Variant::Int(x) => qmlrs_variant_set_int(var, x as c_int),
+                Variant::String(ref x) => qmlrs_variant_set_string(var, x.len() as c_uint,
+                                                                   x.as_ptr() as *const c_char)
             }
         }
     }
@@ -71,6 +78,15 @@ impl Variant {
                     let mut x: c_int = 0;
                     qmlrs_variant_get_int(var, &mut x);
                     Variant::Int(x as int)
+                },
+                QrsVariantType::String => {
+                    let mut len: c_uint = 0;
+                    qmlrs_variant_get_string_length(var, &mut len);
+
+                    let mut data: Vec<u8> = Vec::with_capacity(len as uint);
+                    qmlrs_variant_get_string_data(var, data.as_mut_ptr() as *mut c_char);
+
+                    Variant::String(String::from_utf8_unchecked(data))
                 }
             }
         }

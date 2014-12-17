@@ -83,6 +83,10 @@ rust_fun void qmlrs_variant_set_invalid(QVariant *v) {
     *v = QVariant();
 }
 
+rust_fun void qmlrs_variant_set_string(QVariant *v, unsigned int len, const char *data) {
+    *v = QVariant(QString::fromUtf8(data, len));
+}
+
 rust_fun QVariant *qmlrs_variant_create() {
     return new QVariant();
 }
@@ -92,7 +96,7 @@ rust_fun void qmlrs_variant_destroy(QVariant *v) {
 }
 
 enum QrsVariantType {
-    Invalid = 0, Int
+    Invalid = 0, Int, String
 };
 
 rust_fun QrsVariantType qmlrs_variant_get_type(const QVariant *v) {
@@ -102,12 +106,24 @@ rust_fun QrsVariantType qmlrs_variant_get_type(const QVariant *v) {
     if (v->canConvert(QMetaType::Int))
         return Int;
     
+    if (v->canConvert(QMetaType::QString))
+        return String;
+    
     /* Unknown type, not supported on Rust side */
     return Invalid;
 }
 
 rust_fun void qmlrs_variant_get_int(const QVariant *v, int *x) {
     *x = v->toInt();
+}
+
+rust_fun void qmlrs_variant_get_string_length(const QVariant *v, unsigned int *len) {
+    *len = v->toString().toUtf8().size();
+}
+
+rust_fun void qmlrs_variant_get_string_data(const QVariant *v, char *data) {
+    QByteArray ba = v->toString().toUtf8();
+    memcpy(data, ba.data(), ba.size());
 }
 
 QrsApplicationEngine::QrsApplicationEngine()
