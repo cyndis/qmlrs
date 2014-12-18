@@ -5,10 +5,15 @@ extern crate libc;
 use libc::{c_char, c_int, c_uint, c_void};
 use std::sync::{Arc, Weak};
 
-use ffi::{QVariant, QrsVariantType, QrsEngine};
+use ffi::{QVariant, QrsVariantType, QrsEngine, QVariantList};
 pub use ffi::QVariant as OpaqueQVariant;
 pub mod ffi;
 mod macro;
+
+pub enum Variant {
+    Int(int),
+    String(String)
+}
 
 pub trait FromQVariant {
     fn from_qvariant(arg: *const QVariant) -> Option<Self>;
@@ -47,6 +52,20 @@ impl FromQVariant for String {
     }
 }
 
+impl FromQVariant for Variant {
+    fn from_qvariant(var: *const QVariant) -> Option<Variant> {
+        unsafe {
+            match ffi::qmlrs_variant_get_type(var) {
+                QrsVariantType::Int =>
+                    Some(Variant::Int(FromQVariant::from_qvariant(var).unwrap())),
+                QrsVariantType::String =>
+                    Some(Variant::String(FromQVariant::from_qvariant(var).unwrap())),
+                _ => None
+            }
+        }
+    }
+}
+
 pub trait ToQVariant {
     fn to_qvariant(&self, var: *mut QVariant);
 }
@@ -63,6 +82,24 @@ impl ToQVariant for int {
     fn to_qvariant(&self, var: *mut QVariant) {
         unsafe {
             ffi::qmlrs_variant_set_int(var, *self as c_int);
+        }
+    }
+}
+
+impl ToQVariant for String {
+    fn to_qvariant(&self, var: *mut QVariant) {
+        unsafe {
+            ffi::qmlrs_variant_set_string(var, self.len() as c_uint,
+                                          self.as_ptr() as *const c_char);
+        }
+    }
+}
+
+impl ToQVariant for Variant {
+    fn to_qvariant(&self, var: *mut QVariant) {
+        match *self {
+            Variant::Int(ref x) => x.to_qvariant(var),
+            Variant::String(ref s) => s.to_qvariant(var),
         }
     }
 }
@@ -99,7 +136,6 @@ impl Drop for Engine {
         for held in self.held.iter() {
             unsafe {
                 ((*held.ty).drop_glue)(held.p as *const i8);
-                std::rt::heap::deallocate(held.p as *mut u8, (*held.ty).size, (*held.ty).align);
             }
         }
     }
@@ -189,13 +225,13 @@ impl MetaObject {
         self
     }
 }
-/*
+
 pub struct Handle {
     i: Weak<EngineInternal>
 }
 
 impl Handle {
-    pub fn invoke(&self, method: &str, args: &[Variant]) -> Result<Variant, &'static str> {
+    pub fn invoke(&self, method: &str, args: &[Variant]) -> Result<Option<Variant>, &'static str> {
         unsafe {
             let cstr = method.to_c_str();
 
@@ -204,7 +240,7 @@ impl Handle {
             for arg in args.iter() {
                 let c_arg = ffi::qmlrs_varlist_push(c_args);
                 assert!(c_arg.is_not_null());
-                arg.set_into(c_arg);
+                arg.to_qvariant(c_arg);
             }
 
             let result = ffi::qmlrs_variant_create();
@@ -222,14 +258,13 @@ impl Handle {
 
             ffi::qmlrs_varlist_destroy(c_args);
 
-            let ret = Variant::get_from(result as *const QVariant);
+            let ret = FromQVariant::from_qvariant(result as *const QVariant);
             ffi::qmlrs_variant_destroy(result);
 
             Ok(ret)
         }
     }
 }
-*/
 
 #[cfg(test)]
 mod test {
