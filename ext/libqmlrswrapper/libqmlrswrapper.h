@@ -13,28 +13,8 @@ class QrsApplicationEngine : public QQmlApplicationEngine {
 public:
     QrsApplicationEngine();
     
-    QrsSlotFun *slot_fun;
-    void *slot_data;
-    
 public slots:
     QVariant invokeQmlSlot(QString name, QVariantList args);
-    
-private:
-    QrsInterface *_interface;
-};
-
-class QrsInterface : public QObject {
-    Q_OBJECT
-    
-public:
-    QrsInterface(QrsApplicationEngine *engine) : _engine(engine)
-    { }
-    
-public slots:
-    QVariant invoke(QString event, QVariantList args);
-    
-private:
-    QrsApplicationEngine *_engine;
 };
 
 #endif // libqmlrswrapper_H

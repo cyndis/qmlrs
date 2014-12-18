@@ -179,7 +179,7 @@ int QrsDynamicObject::qt_metacall(QMetaObject::Call c, int id, void** a)
     
     if (c == QMetaObject::InvokeMetaMethod) {
         if (id < _n_slots) {
-            invokeMetacall(id);
+            invokeMetacall(id, a);
         }
         id -= 1;
     } else if (c == QMetaObject::RegisterMethodArgumentMetaType) {
@@ -191,11 +191,10 @@ int QrsDynamicObject::qt_metacall(QMetaObject::Call c, int id, void** a)
     return id;
 }
 
-void QrsDynamicObject::invokeMetacall(int id)
+void QrsDynamicObject::invokeMetacall(int id, void **args)
 {
     if (_fun)
-        /* FIXME */
-        ;
+        _fun(_data, id, (QVariant **)args);
     else
         qWarning("QrsDynamicMetaObject: tried to invoke metacall but handler not set");
 }

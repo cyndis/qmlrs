@@ -45,11 +45,9 @@ rust_fun void qmlrs_engine_invoke(QrsApplicationEngine *engine, const char *meth
     *result = returned;
 }
 
-rust_fun void qmlrs_engine_set_slot_function(QrsApplicationEngine *engine, QrsSlotFun fun, 
-                                             void *data)
-{
-    engine->slot_fun = fun;
-    engine->slot_data = data;
+rust_fun void qmlrs_engine_set_property(QrsApplicationEngine *engine, const char *name, uint len,
+                                        QObject *object) {
+    engine->rootContext()->setContextProperty(QString::fromUtf8(name, len), object);
 }
 
 rust_fun QVariantList *qmlrs_varlist_create() {
@@ -129,10 +127,7 @@ rust_fun void qmlrs_variant_get_string_data(const QVariant *v, char *data) {
 }
 
 QrsApplicationEngine::QrsApplicationEngine()
-: slot_fun(NULL), slot_data(NULL)
 {
-    rootContext()->setContextProperty("qmlrs", new QrsInterface(this));
-    
     QrsDynamicMetaObject *test = new QrsDynamicMetaObject();
     test->addSlot(QrsDynamicMetaObject::Slot { "lol", 0 });
     test->addSlot(QrsDynamicMetaObject::Slot { "kek", 0 });
@@ -161,17 +156,4 @@ QVariant QrsApplicationEngine::invokeQmlSlot(QString name, QVariantList args) {
                               a0, a1, a2, a3, a4, a5, a6, a7, a8, a9);
     
     return returned;
-}
-
-QVariant QrsInterface::invoke(QString event, QVariantList args)
-{
-    if (_engine->slot_fun) {
-        QVariant v;
-        _engine->slot_fun(event.toUtf8(), _engine->slot_data, &v, &args);
-        return v;
-    } else {
-        qWarning("QML side slot called but Rust slot handler not registered");
-    }
-    
-    return QVariant();
 }

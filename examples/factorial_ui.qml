@@ -43,7 +43,6 @@ ApplicationWindow {
   }
 
   function doCalculate() {
-    var text = qmlrs.invoke("calculate", [parseInt(numberField.text)]);
-    resultArea.text = text;
+    ses.sas();
   }
 }

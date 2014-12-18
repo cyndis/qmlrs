@@ -7,7 +7,7 @@
 #error "Unsupport Qt version. Qt with Q_MOC_OUTPUT_REVISION == 67 is required."
 #endif
 
-typedef void *(QrsSlotFunction)(const char *name, void *data, QVariant *result, QVariantList *args);
+extern "C" typedef void *(QrsSlotFunction)(void *data, int slot, QVariant **args);
 
 class QrsDynamicMetaObject
 {
@@ -17,7 +17,7 @@ public:
     
     struct Slot {
         QString name;
-        int args;
+        uint args;
     };
     
     void addSlot(Slot s) {
@@ -51,7 +51,7 @@ private:
 
     QMetaObject *_mo;
     
-    void invokeMetacall(int id);
+    void invokeMetacall(int id, void** args);
 };
 
 #endif // QRSDYNAMICOBJECT_H

@@ -19,7 +19,7 @@ endif()
 find_package(Qt5Core)
 find_package(Qt5Quick)
 
-set(qmlrswrapper_SRCS libqmlrswrapper.cpp qrsdynamicobject.cpp)
+set(qmlrswrapper_SRCS libqmlrswrapper.cpp qrsdynamicobject.cpp qrsdynamicobject_capi.cpp)
 
 add_library(qmlrswrapper STATIC ${qmlrswrapper_SRCS})
 target_link_libraries(qmlrswrapper Qt5::Core Qt5::Quick)
