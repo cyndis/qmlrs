@@ -21,11 +21,21 @@ This is the Rust code for an application allowing the calculation of factorials.
 You can find the corresponding Qml code in the `examples` directory.
 
 ```rust
+#![feature(phase)]
+
+#[phase(plugin, link)]
 extern crate qmlrs;
 
-fn factorial(x: int) -> int {
-    std::iter::range_inclusive(1, x).fold(1, |t,c| t * c)
+struct Factorial;
+impl Factorial {
+    fn calculate(&self, x: int) -> int {
+        std::iter::range_inclusive(1, x).fold(1, |t,c| t * c)
+    }
 }
+
+Q_OBJECT!( Factorial:
+    slot fn calculate(int);
+)
 
 fn main() {
     let mut engine = qmlrs::Engine::new();
@@ -36,16 +46,11 @@ fn main() {
 
     engine.load_url(format!("file://{}", path.display()).as_slice());
 
-    engine.register_slot("calculate", box move |args| {
-        if let qmlrs::Variant::Int(x) = args[0] {
-            qmlrs::Variant::Int(factorial(x))
-        } else {
-            qmlrs::Variant::Invalid
-        }
-    });
+    engine.set_property("factorial", Factorial);
 
     engine.exec();
 }
+
 ```
 
 ## Note regarding the Qt event loop and threads

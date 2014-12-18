@@ -1,4 +1,4 @@
-#![feature(macro_rules, phase)]
+#![feature(phase)]
 
 #[phase(plugin, link)]
 extern crate qmlrs;
