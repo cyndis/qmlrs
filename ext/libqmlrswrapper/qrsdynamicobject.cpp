@@ -64,10 +64,6 @@ void QrsDynamicMetaObject::finalize()
 #undef ADD_STRING_HDR
     
     for (int i = 0; i < stringhdr.size(); ++i) {
-        printf("hdr %d: len %d, offset %d\n", i, stringhdr[i].size, stringhdr[i].offset);
-    }
-    
-    for (int i = 0; i < stringhdr.size(); ++i) {
         stringhdr[i].offset += stringhdr.size() * sizeof(ArrayData);
     }
     
@@ -76,18 +72,6 @@ void QrsDynamicMetaObject::finalize()
     memcpy(stringdata_buf + stringhdr.size() * sizeof(ArrayData), stringdata.data(), 
            stringdata.size());
     _mo->d.stringdata = (const QByteArrayData *)stringdata_buf;
-    
-    for (int i = 0; i < stringhdr.size(); ++i) {
-        printf("hdr %d: len %d, offset %d\n", i, stringhdr[i].size, stringhdr[i].offset);
-    }
-    
-    for (int i = 0; i < stringdata.size(); ++i) {
-        if (!stringdata_buf[stringhdr.size() * sizeof(ArrayData) + i])
-            printf(";");
-        else
-            printf("%c", stringdata_buf[stringhdr.size() * sizeof(ArrayData) + i]);
-    }
-    printf("\n");
     
     /* Build metadata */
     
@@ -130,8 +114,6 @@ void QrsDynamicMetaObject::finalize()
     
     metadata.append(0);
     
-    qDebug() << "metadata" << metadata;
-    
     uint *metadata_buf = new uint[metadata.size()];
     memcpy(metadata_buf, metadata.constData(), metadata.size() * sizeof(uint));
     _mo->d.data = metadata_buf;
@@ -162,8 +144,6 @@ void* QrsDynamicObject::qt_metacast(const char* )
 {
     if (!_mo)
         qFatal("QrsDynamicObject::qt_metacast() called without finalization");
-    
-    qDebug() << "qt_metacast called";
 
     return Q_NULLPTR;
 }
@@ -174,8 +154,6 @@ int QrsDynamicObject::qt_metacall(QMetaObject::Call c, int id, void** a)
         qFatal("QrsDynamicObject::qt_metacall() called without finalization");
     
     id = QObject::qt_metacall(c, id, a);
-    
-    qDebug() << "QrsDynamicObject::qt_metacall:" << c << id << a;
     
     if (c == QMetaObject::InvokeMetaMethod) {
         if (id < _n_slots) {

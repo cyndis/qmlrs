@@ -3,19 +3,15 @@
 #[phase(plugin, link)]
 extern crate qmlrs;
 
-fn factorial(x: int) -> int {
-    std::iter::range_inclusive(1, x).fold(1, |t,c| t * c)
-}
-
-struct Ses;
-impl Ses {
-    fn sas(&mut self) {
-        println!("Sas tosiaan!");
+struct Factorial;
+impl Factorial {
+    fn calculate(&self, x: int) -> int {
+        std::iter::range_inclusive(1, x).fold(1, |t,c| t * c)
     }
 }
 
-Q_OBJECT!( Ses:
-    slot fn sas();
+Q_OBJECT!( Factorial:
+    slot fn calculate(int);
 )
 
 fn main() {
@@ -27,7 +23,7 @@ fn main() {
 
     engine.load_url(format!("file://{}", path.display()).as_slice());
 
-    engine.set_property("ses", Ses);
+    engine.set_property("factorial", Factorial);
 
     engine.exec();
 }

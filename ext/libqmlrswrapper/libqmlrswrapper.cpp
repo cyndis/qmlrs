@@ -128,11 +128,6 @@ rust_fun void qmlrs_variant_get_string_data(const QVariant *v, char *data) {
 
 QrsApplicationEngine::QrsApplicationEngine()
 {
-    QrsDynamicMetaObject *test = new QrsDynamicMetaObject();
-    test->addSlot(QrsDynamicMetaObject::Slot { "lol", 0 });
-    test->addSlot(QrsDynamicMetaObject::Slot { "kek", 0 });
-    
-    rootContext()->setContextProperty("dyn", test->create(NULL, NULL));
 }
 
 QVariant QrsApplicationEngine::invokeQmlSlot(QString name, QVariantList args) {

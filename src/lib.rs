@@ -1,59 +1,76 @@
-#![feature(unboxed_closures, globs, macro_rules)]
+#![feature(unboxed_closures, globs, macro_rules, unsafe_destructor)]
 
 extern crate libc;
 
 use libc::{c_char, c_int, c_uint, c_void};
 use std::sync::{Arc, Weak};
 
-use ffi::{QVariant, QrsVariantType, QrsEngine, QVariantList};
+use ffi::{QVariant, QrsVariantType, QrsEngine};
+pub use ffi::QVariant as OpaqueQVariant;
 pub mod ffi;
 mod macro;
 
-#[deriving(Eq, PartialEq, Show)]
-pub enum Variant {
-    Invalid,
-    Int(int),
-    String(String)
+pub trait FromQVariant {
+    fn from_qvariant(arg: *const QVariant) -> Option<Self>;
 }
 
-impl Variant {
-    fn set_into(&self, var: *mut QVariant) {
+impl FromQVariant for int {
+    fn from_qvariant(var: *const QVariant) -> Option<int> {
         unsafe {
-            match *self {
-                Variant::Invalid => ffi::qmlrs_variant_set_invalid(var),
-                Variant::Int(x) => ffi::qmlrs_variant_set_int(var, x as c_int),
-                Variant::String(ref x) => ffi::qmlrs_variant_set_string(var, x.len() as c_uint,
-                                                                   x.as_ptr() as *const c_char)
-            }
-        }
-    }
-
-    fn get_from(var: *const QVariant) -> Variant {
-        unsafe {
-            match ffi::qmlrs_variant_get_type(var) {
-                QrsVariantType::Invalid => Variant::Invalid,
-                QrsVariantType::Int => {
-                    let mut x: c_int = 0;
-                    ffi::qmlrs_variant_get_int(var, &mut x);
-                    Variant::Int(x as int)
-                },
-                QrsVariantType::String => {
-                    let mut len: c_uint = 0;
-                    ffi::qmlrs_variant_get_string_length(var, &mut len);
-
-                    let mut data: Vec<u8> = Vec::with_capacity(len as uint);
-                    ffi::qmlrs_variant_get_string_data(var, data.as_mut_ptr() as *mut c_char);
-                    data.set_len(len as uint);
-
-                    Variant::String(String::from_utf8_unchecked(data))
-                }
+            if ffi::qmlrs_variant_get_type(var) == QrsVariantType::Int {
+                let mut x: c_int = 0;
+                ffi::qmlrs_variant_get_int(var, &mut x);
+                Some(x as int)
+            } else {
+                None
             }
         }
     }
 }
 
-//pub type Slot = Box<FnMut<(Vec<Variant>,),Variant> + 'static>;
-pub type Slot = Box<FnMut<(), ()> + 'static>;
+impl FromQVariant for String {
+    fn from_qvariant(var: *const QVariant) -> Option<String> {
+        unsafe {
+            if ffi::qmlrs_variant_get_type(var) == QrsVariantType::String {
+                let mut len: c_uint = 0;
+                ffi::qmlrs_variant_get_string_length(var, &mut len);
+
+                let mut data: Vec<u8> = Vec::with_capacity(len as uint);
+                ffi::qmlrs_variant_get_string_data(var, data.as_mut_ptr() as *mut c_char);
+                data.set_len(len as uint);
+
+                Some(String::from_utf8_unchecked(data))
+            } else {
+                None
+            }
+        }
+    }
+}
+
+pub trait ToQVariant {
+    fn to_qvariant(&self, var: *mut QVariant);
+}
+
+impl ToQVariant for () {
+    fn to_qvariant(&self, var: *mut QVariant) {
+        unsafe {
+            ffi::qmlrs_variant_set_invalid(var);
+        }
+    }
+}
+
+impl ToQVariant for int {
+    fn to_qvariant(&self, var: *mut QVariant) {
+        unsafe {
+            ffi::qmlrs_variant_set_int(var, *self as c_int);
+        }
+    }
+}
+
+pub trait Object {
+    fn qt_metaobject(&self) -> MetaObject;
+    fn qt_metacall(&mut self, slot: i32, args: *const *const OpaqueQVariant);
+}
 
 struct EngineInternal {
     p: *mut QrsEngine,
@@ -65,45 +82,35 @@ impl Drop for EngineInternal {
     }
 }
 
-pub struct Engine {
-    nosend: ::std::kinds::marker::NoSend,
-    i: Arc<EngineInternal>
+struct HeldProp {
+    p: *mut (),
+    ty: *const std::intrinsics::TyDesc
 }
 
-/*
-extern "C" fn slot_fun(slot: *const c_char, data: *mut c_void, result: *mut QVariant,
-                       c_args: *mut QVariantList)
-{
-    /* EngineInternal must be alive here, since the Qml context is alive */
+pub struct Engine {
+    nosend: ::std::kinds::marker::NoSend,
+    i: Arc<EngineInternal>,
+    held: Vec<HeldProp>
+}
 
-    let i: &EngineInternal = unsafe { std::mem::transmute(data) };
-    let cstr = unsafe { CString::new(slot, false) };
-
-    unsafe {
-        let mut args = vec![];
-        for j in range(0, ffi::qmlrs_varlist_length(c_args as *const QVariantList)) {
-            let c_arg = ffi::qmlrs_varlist_get(c_args as *const QVariantList, j);
-            args.push(Variant::get_from(c_arg as *const QVariant));
-        }
-
-        /* Must be UTF-8 since these are created from Rust code */
-        match (*i.slots.get()).get_mut(cstr.as_str().unwrap()) {
-            Some(slot) => slot.call_mut((args,)).set_into(result),
-            None       => {
-                println!("Warning: unregistered slot called from Qml");
-                ffi::qmlrs_variant_set_invalid(result);
+#[unsafe_destructor]
+impl Drop for Engine {
+    fn drop(&mut self) {
+        for held in self.held.iter() {
+            unsafe {
+                ((*held.ty).drop_glue)(held.p as *const i8);
+                std::rt::heap::deallocate(held.p as *mut u8, (*held.ty).size, (*held.ty).align);
             }
         }
     }
 }
-*/
 
 extern "C" fn slot_handler<T: Object>(data: *mut c_void, slot: c_int,
                                       args: *const *const ffi::QVariant)
 {
     unsafe {
         let obj: &mut T = std::mem::transmute(data);
-        obj.qt_metacall(slot as i32);
+        obj.qt_metacall(slot as i32, args);
     }
 }
 
@@ -118,13 +125,15 @@ impl Engine {
 
         Engine {
             nosend: ::std::kinds::marker::NoSend,
-            i: i
+            i: i,
+            held: vec![]
         }
     }
 
     pub fn load_url(&mut self, path: &str) {
         unsafe {
-            ffi::qmlrs_engine_load_url(self.i.p, path.as_ptr() as *const c_char, path.len() as c_uint);
+            ffi::qmlrs_engine_load_url(self.i.p, path.as_ptr() as *const c_char,
+                                       path.len() as c_uint);
         }
     }
 
@@ -132,9 +141,11 @@ impl Engine {
         unsafe { ffi::qmlrs_app_exec(); }
     }
 
+    /*
     pub fn handle(&self) -> Handle {
         Handle { i: self.i.downgrade() }
     }
+    */
 
     pub fn set_property<T: Object>(&mut self, name: &str, obj: T) {
         unsafe {
@@ -146,15 +157,16 @@ impl Engine {
             ffi::qmlrs_engine_set_property(self.i.p, name.as_ptr() as *const c_char,
                                            name.len() as c_uint, qobj);
 
+            /* Uhh.. */
+            self.held.push(HeldProp { p: &mut *boxed as *mut T as *mut (),
+                                      ty: std::intrinsics::get_tydesc::<T>() });
+
             std::mem::forget(boxed);
         }
     }
 }
 
-pub trait Object {
-    fn qt_metaobject(&self) -> MetaObject;
-    fn qt_metacall(&mut self, slot: i32);
-}
+/* MetaObjects currently leak. Once a cache system is implemented, this should be fine. */
 
 #[allow(missing_copy_implementations)]
 pub struct MetaObject {
@@ -177,7 +189,7 @@ impl MetaObject {
         self
     }
 }
-
+/*
 pub struct Handle {
     i: Weak<EngineInternal>
 }
@@ -217,6 +229,7 @@ impl Handle {
         }
     }
 }
+*/
 
 #[cfg(test)]
 mod test {

@@ -43,6 +43,7 @@ ApplicationWindow {
   }
 
   function doCalculate() {
-    ses.sas();
+    var num = parseInt(numberField.text);
+    resultArea.text = factorial.calculate(num);
   }
 }
