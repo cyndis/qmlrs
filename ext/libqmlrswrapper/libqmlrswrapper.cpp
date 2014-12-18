@@ -1,5 +1,7 @@
 #include "libqmlrswrapper.h"
 
+#include "qrsdynamicobject.h"
+
 #include <QtQuick>
 #include <QDebug>
 
@@ -130,6 +132,12 @@ QrsApplicationEngine::QrsApplicationEngine()
 : slot_fun(NULL), slot_data(NULL)
 {
     rootContext()->setContextProperty("qmlrs", new QrsInterface(this));
+    
+    QrsDynamicMetaObject *test = new QrsDynamicMetaObject();
+    test->addSlot(QrsDynamicMetaObject::Slot { "lol", 0 });
+    test->addSlot(QrsDynamicMetaObject::Slot { "kek", 0 });
+    
+    rootContext()->setContextProperty("dyn", test->create(NULL, NULL));
 }
 
 QVariant QrsApplicationEngine::invokeQmlSlot(QString name, QVariantList args) {
