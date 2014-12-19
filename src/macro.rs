@@ -50,4 +50,4 @@ macro_rules! Q_OBJECT(
             }
         }
     )
-)
+);

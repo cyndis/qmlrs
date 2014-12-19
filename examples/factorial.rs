@@ -12,7 +12,7 @@ impl Factorial {
 
 Q_OBJECT!( Factorial:
     slot fn calculate(int);
-)
+);
 
 fn main() {
     let mut engine = qmlrs::Engine::new();
