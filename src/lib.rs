@@ -166,6 +166,21 @@ impl Engine {
         }
     }
 
+    pub fn new_headless() -> Engine {
+        let p = unsafe { ffi::qmlrs_create_engine_headless() };
+        assert!(p.is_not_null());
+
+        let i = Arc::new(EngineInternal {
+            p: p,
+        });
+
+        Engine {
+            nosend: ::std::kinds::marker::NoSend,
+            i: i,
+            held: vec![]
+        }
+    }
+
     pub fn load_url(&mut self, path: &str) {
         unsafe {
             ffi::qmlrs_engine_load_url(self.i.p, path.as_ptr() as *const c_char,
@@ -272,6 +287,6 @@ mod test {
 
     #[test]
     fn test_create_engine() {
-        Engine::new();
+        Engine::new_headless();
     }
 }

@@ -7,6 +7,22 @@
 
 #define rust_fun extern "C"
 
+rust_fun QrsApplicationEngine *qmlrs_create_engine_headless() {
+    if (!QCoreApplication::instance()) {
+        char *arg = (char *)malloc(13);
+        strcpy(arg, "qmlrswrapper");
+        char **argp = (char **)malloc(sizeof(char *));
+        *argp = arg;
+
+        int *argc = (int *)malloc(sizeof(int));
+        *argc = 1;
+
+        new QCoreApplication(*argc, argp);
+    }
+
+    return new QrsApplicationEngine();
+}
+
 rust_fun QrsApplicationEngine *qmlrs_create_engine() {
     if (!QGuiApplication::instance()) {
         char *arg = (char *)malloc(13);
