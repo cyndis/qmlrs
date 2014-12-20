@@ -19,3 +19,7 @@ extern "C" QObject *qmlrs_metaobject_instantiate(QrsDynamicMetaObject *mo, QrsSl
 {
     return mo->create(fun, data);
 }
+
+extern "C" void qmlrs_object_destroy(QrsDynamicObject *obj) {
+    delete obj;
+}

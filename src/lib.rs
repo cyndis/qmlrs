@@ -121,6 +121,7 @@ impl Drop for EngineInternal {
 
 struct HeldProp {
     p: *mut (),
+    qp: *mut ffi::QObject,
     ty: *const std::intrinsics::TyDesc
 }
 
@@ -135,7 +136,8 @@ impl Drop for Engine {
     fn drop(&mut self) {
         for held in self.held.iter() {
             unsafe {
-                ((*held.ty).drop_glue)(held.p as *const i8);
+                ((*held.ty).drop_glue)(std::mem::transmute(&held.p));
+                ffi::qmlrs_object_destroy(held.qp);
             }
         }
     }
@@ -209,8 +211,8 @@ impl Engine {
                                            name.len() as c_uint, qobj);
 
             /* Uhh.. */
-            self.held.push(HeldProp { p: &mut *boxed as *mut T as *mut (),
-                                      ty: std::intrinsics::get_tydesc::<T>() });
+            self.held.push(HeldProp { p: &mut *boxed as *mut T as *mut (), qp: qobj,
+                                      ty: std::intrinsics::get_tydesc::<Box<T>>() });
 
             std::mem::forget(boxed);
         }

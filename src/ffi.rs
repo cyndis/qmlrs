@@ -52,4 +52,6 @@ extern "C" {
                                      argc: c_uint);
     pub fn qmlrs_metaobject_instantiate(mo: *mut QrsMetaObject, fun: SlotFunction,
                                         data: *mut c_void) -> *mut QObject;
+
+    pub fn qmlrs_object_destroy(obj: *mut QObject);
 }
