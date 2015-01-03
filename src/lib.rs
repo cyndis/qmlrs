@@ -4,6 +4,7 @@ extern crate libc;
 
 use libc::{c_char, c_int, c_uint, c_void};
 use std::sync::{Arc, Weak};
+use std::c_str::ToCStr;
 
 use ffi::{QVariant, QrsVariantType, QrsEngine, QVariantList};
 pub use ffi::QVariant as OpaqueQVariant;
@@ -113,6 +114,10 @@ struct EngineInternal {
     p: *mut QrsEngine,
 }
 
+/* Hack to get invoke working. Need to figure out better way for invokes anyway.. */
+unsafe impl Send for EngineInternal { }
+unsafe impl Sync for EngineInternal { }
+
 impl Drop for EngineInternal {
     fn drop(&mut self) {
         unsafe { ffi::qmlrs_destroy_engine(self.p); }
@@ -155,7 +160,7 @@ extern "C" fn slot_handler<T: Object>(data: *mut c_void, slot: c_int,
 impl Engine {
     pub fn new() -> Engine {
         let p = unsafe { ffi::qmlrs_create_engine() };
-        assert!(p.is_not_null());
+        assert!(!p.is_null());
 
         let i = Arc::new(EngineInternal {
             p: p,
@@ -170,7 +175,7 @@ impl Engine {
 
     pub fn new_headless() -> Engine {
         let p = unsafe { ffi::qmlrs_create_engine_headless() };
-        assert!(p.is_not_null());
+        assert!(!p.is_null());
 
         let i = Arc::new(EngineInternal {
             p: p,
@@ -229,7 +234,7 @@ pub struct MetaObject {
 impl MetaObject {
     pub fn new() -> MetaObject {
         let p = unsafe { ffi::qmlrs_metaobject_create() };
-        assert!(p.is_not_null());
+        assert!(!p.is_null());
 
         MetaObject { p: p }
     }
@@ -253,15 +258,15 @@ impl Handle {
             let cstr = method.to_c_str();
 
             let c_args = ffi::qmlrs_varlist_create();
-            assert!(c_args.is_not_null());
+            assert!(!c_args.is_null());
             for arg in args.iter() {
                 let c_arg = ffi::qmlrs_varlist_push(c_args);
-                assert!(c_arg.is_not_null());
+                assert!(!c_arg.is_null());
                 arg.to_qvariant(c_arg);
             }
 
             let result = ffi::qmlrs_variant_create();
-            assert!(result.is_not_null());
+            assert!(!result.is_null());
 
             match self.i.upgrade() {
                 Some(i) => ffi::qmlrs_engine_invoke(i.p, cstr.as_ptr(), result,
