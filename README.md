@@ -68,5 +68,5 @@ an error if the underlying `Engine` has been destroyed.
 
 ## Licensing
 
-The code in this library is licensed under both the MIT license and the Apache License (version 2.0).
+The code in this library is dual-licensed under the MIT license and the Apache License (version 2.0).
 See LICENSE-APACHE and LICENSE-MIT for details.
