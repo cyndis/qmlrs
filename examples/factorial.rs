@@ -21,7 +21,7 @@ fn main() {
     path.push_many(&["examples", "factorial_ui.qml"]);
     path = std::os::make_absolute(&path).unwrap();
 
-    engine.load_url(format!("file://{}", path.display()).as_slice());
+    engine.load_local_file(&Path::new("examples/factorial_ui.qml"));
 
     engine.set_property("factorial", Factorial);
 

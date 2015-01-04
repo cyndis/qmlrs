@@ -108,6 +108,16 @@ impl Engine {
         }
     }
 
+    pub fn load_local_file(&mut self, name: &Path) {
+        unsafe {
+            let mut path = std::os::getcwd().unwrap();
+            path.push(name);
+            path = std::os::make_absolute(&path).unwrap();
+
+            self.load_url(format!("file://{}", path.display()).as_slice());
+        }
+    }
+
     pub fn exec(self) {
         unsafe { ffi::qmlrs_app_exec(); }
     }
