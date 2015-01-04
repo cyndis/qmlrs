@@ -78,7 +78,7 @@ impl ToQVariant for int {
     }
 }
 
-impl ToQVariant for String {
+impl ToQVariant for str {
     fn to_qvariant(&self, var: *mut QVariant) {
         unsafe {
             ffi::qmlrs_variant_set_string(var, self.len() as c_uint,

@@ -5,7 +5,6 @@ extern crate libc;
 use libc::{c_char, c_int, c_uint, c_void};
 use std::sync::{Arc, Weak};
 use std::c_str::ToCStr;
-use std::any::{Any, AnyMutRefExt};
 use ffi::{QVariant, QrsVariantType, QrsEngine, QVariantList};
 
 /* Re-exports */
