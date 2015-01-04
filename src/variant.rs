@@ -4,7 +4,7 @@ use ffi::{QVariant, QrsVariantType};
 
 pub enum Variant {
     Int(int),
-    String(String)
+    String(String),
 }
 
 pub trait FromQVariant {

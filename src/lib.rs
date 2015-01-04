@@ -5,7 +5,7 @@ extern crate libc;
 use libc::{c_char, c_int, c_uint, c_void};
 use std::sync::{Arc, Weak};
 use std::c_str::ToCStr;
-use ffi::{QVariant, QrsVariantType, QrsEngine, QVariantList};
+use ffi::{QVariant, QrsVariantType, QrsEngine, QVariantList, QObject};
 
 /* Re-exports */
 
@@ -21,6 +21,20 @@ mod variant;
 pub trait Object {
     fn qt_metaobject(&self) -> MetaObject;
     fn qt_metacall(&mut self, slot: i32, args: *const *const OpaqueQVariant);
+}
+
+pub fn __qobject_emit<T: Object>(obj: &T, id: u32) {
+    unsafe {
+        ffi::qmlrs_object_emit_signal(get_qobject(obj), id as c_uint);
+    }
+}
+
+fn get_qobject<T: Object>(ptr: &T) -> *mut QObject {
+    unsafe {
+        let t_addr: uint = std::mem::transmute(ptr);
+        let hdr: &PropHdr<T> = std::mem::transmute(t_addr - std::mem::size_of::<*mut QObject>());
+        hdr.qobj
+    }
 }
 
 struct EngineInternal {
@@ -61,12 +75,18 @@ impl Drop for Engine {
     }
 }
 
+#[packed]
+struct PropHdr<T: Object> {
+    qobj: *mut QObject,
+    obj: T
+}
+
 extern "C" fn slot_handler<T: Object>(data: *mut c_void, slot: c_int,
                                       args: *const *const ffi::QVariant)
 {
     unsafe {
-        let obj: &mut T = std::mem::transmute(data);
-        obj.qt_metacall(slot as i32, args);
+        let hdr: &mut PropHdr<T> = std::mem::transmute(data);
+        hdr.obj.qt_metacall(slot as i32, args);
     }
 }
 
@@ -109,13 +129,11 @@ impl Engine {
     }
 
     pub fn load_local_file(&mut self, name: &Path) {
-        unsafe {
-            let mut path = std::os::getcwd().unwrap();
-            path.push(name);
-            path = std::os::make_absolute(&path).unwrap();
+        let mut path = std::os::getcwd().unwrap();
+        path.push(name);
+        path = std::os::make_absolute(&path).unwrap();
 
-            self.load_url(format!("file://{}", path.display()).as_slice());
-        }
+        self.load_url(format!("file://{}", path.display()).as_slice());
     }
 
     pub fn exec(self) {
@@ -131,15 +149,17 @@ impl Engine {
     pub fn set_property<T: Object>(&mut self, name: &str, obj: T) {
         unsafe {
             let mo = obj.qt_metaobject().p;
-            let mut boxed = box obj;
-            let qobj = ffi::qmlrs_metaobject_instantiate(mo, slot_handler::<T>,
-                                                         &mut *boxed as *mut T as *mut c_void);
+            let mut boxed = box PropHdr { qobj: std::ptr::null_mut(), obj: obj };
+            let qobj = ffi::qmlrs_metaobject_instantiate(
+                mo, slot_handler::<T>, &mut *boxed as *mut PropHdr<T> as *mut c_void);
+
+            boxed.qobj = qobj;
 
             ffi::qmlrs_engine_set_property(self.i.p, name.as_ptr() as *const c_char,
                                            name.len() as c_uint, qobj);
 
             /* Uhh.. */
-            self.held.push(HeldProp { p: &mut *boxed as *mut T as *mut (), qp: qobj,
+            self.held.push(HeldProp { p: &mut *boxed as *mut PropHdr<T> as *mut (), qp: qobj,
                                       ty: std::intrinsics::get_tydesc::<Box<T>>() });
 
             std::mem::forget(boxed);
@@ -162,10 +182,18 @@ impl MetaObject {
         MetaObject { p: p }
     }
 
-    pub fn method(self, name: &str, argc: u8) -> MetaObject {
+    pub fn slot(self, name: &str, argc: u8) -> MetaObject {
         unsafe {
             ffi::qmlrs_metaobject_add_slot(self.p, name.as_ptr() as *const c_char,
                                            name.len() as c_uint, argc as c_uint);
+        }
+        self
+    }
+
+    pub fn signal(self, name: &str, argc: u8) -> MetaObject {
+        unsafe {
+            ffi::qmlrs_metaobject_add_signal(self.p, name.as_ptr() as *const c_char,
+                                             name.len() as c_uint, argc as c_uint);
         }
         self
     }

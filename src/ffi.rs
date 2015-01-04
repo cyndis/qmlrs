@@ -50,8 +50,11 @@ extern "C" {
     pub fn qmlrs_metaobject_destroy(mo: *mut QrsMetaObject);
     pub fn qmlrs_metaobject_add_slot(mo: *mut QrsMetaObject, name: *const c_char, name_len: c_uint,
                                      argc: c_uint);
+    pub fn qmlrs_metaobject_add_signal(mo: *mut QrsMetaObject, name: *const c_char,
+                                       name_len: c_uint, argc: c_uint);
     pub fn qmlrs_metaobject_instantiate(mo: *mut QrsMetaObject, fun: SlotFunction,
                                         data: *mut c_void) -> *mut QObject;
 
+    pub fn qmlrs_object_emit_signal(obj: *mut QObject, id: c_uint);
     pub fn qmlrs_object_destroy(obj: *mut QObject);
 }

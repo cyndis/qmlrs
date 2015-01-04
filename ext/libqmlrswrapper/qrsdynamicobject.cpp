@@ -47,13 +47,13 @@ void QrsDynamicMetaObject::finalize()
     ADD_STRING_HDR(classname.size());
     stringdata.append(classname);
     stringdata.append('\0');
-    for (int i = 0; i < _slots.size(); ++i) {
-        ADD_STRING_HDR(_slots[i].name.size());
-        stringdata.append(_slots[i].name);
+    for (int i = 0; i < _methods.size(); ++i) {
+        ADD_STRING_HDR(_methods[i].name.size());
+        stringdata.append(_methods[i].name);
         stringdata.append('\0');
         ADD_STRING_HDR(0);
         stringdata.append('\0'); // tag
-        for (int j = 0; j < _slots[i].args; ++j) {
+        for (int j = 0; j < _methods[i].args; ++j) {
             QString arg = QString::fromUtf8("arg%1").arg(j);
             ADD_STRING_HDR(arg.size());
             stringdata.append(arg);
@@ -79,37 +79,41 @@ void QrsDynamicMetaObject::finalize()
     metadata.append(7); /* revision */
     metadata.append(0); /* classname string id */
     metadata.append(0); metadata.append(0); /* class info */
-    metadata.append(_slots.size()); metadata.append(0xbd); /* method number, list offset */
+    metadata.append(_methods.size()); metadata.append(0xbd); /* method number, list offset */
     metadata.append(0); metadata.append(0); /* properties */
     metadata.append(0); metadata.append(0); /* enums */
     metadata.append(0); metadata.append(0); /* constructors */
     metadata.append(0); /* flags */
-    metadata.append(0); /* signals */
+    
+    int n_signals = 0;
+    for (int i = 0; i < _methods.size(); ++i)
+        if (_methods[i].flags == 0x06) ++n_signals;
+    metadata.append(n_signals); /* signals */
     
     metadata[5] = metadata.size(); /* fixup method list offset */
     int str_ptr = 1;
     QList<uint> fixup_offsets;
-    for (int i = 0; i < _slots.size(); ++i) {
+    for (int i = 0; i < _methods.size(); ++i) {
         metadata.append(str_ptr);
-        metadata.append(_slots[i].args);
+        metadata.append(_methods[i].args);
         fixup_offsets.append(metadata.size());
         metadata.append(0xbd); /* argument list offset */
         metadata.append(str_ptr+1); /* tag. unused */
-        metadata.append(0x0a); /* public */
-        str_ptr += 2 + _slots[i].args;
+        metadata.append(_methods[i].flags); /* public */
+        str_ptr += 2 + _methods[i].args;
     }
     
     str_ptr = 3;
-    for (int i = 0; i < _slots.size(); ++i) {
+    for (int i = 0; i < _methods.size(); ++i) {
         metadata[fixup_offsets.takeFirst()] = metadata.size();
         metadata.append(QMetaType::QVariant);
-        for (int j = 0; j < _slots[i].args; ++j) {
+        for (int j = 0; j < _methods[i].args; ++j) {
             metadata.append(QMetaType::QVariant);
         }
-        for (int j = 0; j < _slots[i].args; ++j) {
+        for (int j = 0; j < _methods[i].args; ++j) {
             metadata.append(str_ptr+j);
         }
-        str_ptr += 2 + _slots[i].args;
+        str_ptr += 2 + _methods[i].args;
     }
     
     metadata.append(0);
@@ -124,7 +128,7 @@ QObject* QrsDynamicMetaObject::create(QrsSlotFunction fun, void* data)
     if (!_mo)
         finalize();
     
-    return new QrsDynamicObject(fun, data, _mo, _slots.size());
+    return new QrsDynamicObject(fun, data, _mo, _methods.size());
 }
 
 QrsDynamicObject::QrsDynamicObject(QrsSlotFunction* fun, void* data, QMetaObject* mo, int n_slots)
@@ -134,25 +138,16 @@ QrsDynamicObject::QrsDynamicObject(QrsSlotFunction* fun, void* data, QMetaObject
 
 const QMetaObject* QrsDynamicObject::metaObject() const
 {
-    if (!_mo)
-        qFatal("QrsDynamicObject::metaObject() called without finalization");
-    
     return _mo;
 }
 
 void* QrsDynamicObject::qt_metacast(const char* )
 {
-    if (!_mo)
-        qFatal("QrsDynamicObject::qt_metacast() called without finalization");
-
     return Q_NULLPTR;
 }
 
 int QrsDynamicObject::qt_metacall(QMetaObject::Call c, int id, void** a)
 {
-    if (!_mo)
-        qFatal("QrsDynamicObject::qt_metacall() called without finalization");
-    
     id = QObject::qt_metacall(c, id, a);
     
     if (c == QMetaObject::InvokeMetaMethod) {
@@ -175,4 +170,9 @@ void QrsDynamicObject::invokeMetacall(int id, void **args)
         _fun(_data, id, (QVariant **)args);
     else
         qWarning("QrsDynamicMetaObject: tried to invoke metacall but handler not set");
+}
+
+void QrsDynamicObject::emitSignal(int id)
+{
+    QMetaObject::activate(this, _mo, id, Q_NULLPTR);
 }
