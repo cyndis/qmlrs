@@ -7,7 +7,6 @@ struct Factorial;
 impl Factorial {
     fn calculate(&self, x: int) -> int {
         self.test();
-
         std::iter::range_inclusive(1, x).fold(1, |t,c| t * c)
     }
 }

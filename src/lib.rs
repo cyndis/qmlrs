@@ -14,6 +14,7 @@ pub use ffi::QVariant as OpaqueQVariant;
 
 /* Submodules */
 
+#[allow(dead_code)]
 mod ffi;
 mod macro;
 mod variant;
