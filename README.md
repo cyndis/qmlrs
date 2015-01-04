@@ -15,6 +15,7 @@ at this time. Reviews of the code would be welcome.
 
 The library consists of a Rust part and a C++ part. The C++ part will be compiled automatically
 when building with Cargo. You will need `cmake`, Qt5 and a C++ compiler that can compile Qt5 code.
+Your Qt5 installation should have at least the following modules: Core, Gui, Qml, Quick and Quick Controls.
 
 ## Current limitations
 
