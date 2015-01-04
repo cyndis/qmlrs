@@ -1,3 +1,5 @@
+extern crate "pkg-config" as pkg_config;
+
 use std::io::Command;
 use std::os;
 
@@ -21,5 +23,6 @@ fn main() {
         panic!("Failed to run make");
     }
 
-    println!("cargo:rustc-flags=-L {} -l qmlrswrapper:static -l Qt5Core -l Qt5Quick -l Qt5Gui -l Qt5Qml -l stdc++", build.display());
+    println!("cargo:rustc-flags=-L {} -l qmlrswrapper:static -l stdc++", build.display());
+    pkg_config::find_library("Qt5Core Qt5Gui Qt5Qml Qt5Quick").unwrap();
 }
