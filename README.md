@@ -5,19 +5,27 @@
 qmlrs allows the use of Qml/QtQuick code from Rust, specifically
 
 - Rust code can create a QtQuick engine (QQmlApplicationEngine) with a loaded Qml script
-- Rust code can invoke Qml functions
 - Qml code can invoke Rust functions
+- Qml code can connect to signals defined in Rust
 
-..with certain limitations. The library should be safe (as in not `unsafe`) to use, but no promises.
+..with certain limitations. The library should be safe (as in not `unsafe`) to use, but no promises
+at this time. Reviews of the code would be welcome.
 
 ## Requirements
 
 The library consists of a Rust part and a C++ part. The C++ part will be compiled automatically
 when building with Cargo. You will need `cmake`, Qt5 and a C++ compiler that can compile Qt5 code.
 
+## Current limitations
+
+- The Engine holds ownership of all properties and signal emission requires a reference to one.
+  This means that signals can currently only be emitted from slot handlers making them not very
+  useful.
+
 ## Example
 
 This is the Rust code for an application allowing the calculation of factorials.
+(Also contains a test for signals.)
 You can find the corresponding Qml code in the `examples` directory.
 
 ```rust
@@ -29,24 +37,21 @@ extern crate qmlrs;
 struct Factorial;
 impl Factorial {
     fn calculate(&self, x: int) -> int {
+        self.test();
         std::iter::range_inclusive(1, x).fold(1, |t,c| t * c)
     }
 }
 
-Q_OBJECT!( Factorial:
+Q_OBJECT! { Factorial:
     slot fn calculate(int);
-)
+    signal fn test();
+}
 
 fn main() {
     let mut engine = qmlrs::Engine::new();
 
-    let mut path = std::os::getcwd().unwrap();
-    path.push_many(&["examples", "factorial_ui.qml"]);
-    path = std::os::make_absolute(&path).unwrap();
-
-    engine.load_url(format!("file://{}", path.display()).as_slice());
-
     engine.set_property("factorial", Factorial);
+    engine.load_local_file(&Path::new("examples/factorial_ui.qml"));
 
     engine.exec();
 }
