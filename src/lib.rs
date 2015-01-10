@@ -1,11 +1,11 @@
-#![feature(unboxed_closures, globs, macro_rules, unsafe_destructor)]
+#![allow(unstable)]
+#![feature(unboxed_closures, unsafe_destructor)]
 
 extern crate libc;
 
 use libc::{c_char, c_int, c_uint, c_void};
-use std::sync::{Arc, Weak};
-use std::c_str::ToCStr;
-use ffi::{QVariant, QrsVariantType, QrsEngine, QVariantList, QObject};
+use std::sync::Arc;
+use ffi::{QVariant, QrsEngine, QObject};
 
 /* Re-exports */
 
@@ -16,7 +16,7 @@ pub use ffi::QVariant as OpaqueQVariant;
 
 #[allow(dead_code)]
 mod ffi;
-mod macro;
+mod macros;
 mod variant;
 
 pub trait Object {
@@ -30,9 +30,10 @@ pub fn __qobject_emit<T: Object>(obj: &T, id: u32) {
     }
 }
 
+/* This is unsafe in case the user copies the data. Might need to figure out something different. */
 fn get_qobject<T: Object>(ptr: &T) -> *mut QObject {
     unsafe {
-        let t_addr: uint = std::mem::transmute(ptr);
+        let t_addr: usize = std::mem::transmute(ptr);
         let hdr: &PropHdr<T> = std::mem::transmute(t_addr - std::mem::size_of::<*mut QObject>());
         hdr.qobj
     }
@@ -59,7 +60,6 @@ struct HeldProp {
 }
 
 pub struct Engine {
-    nosend: ::std::kinds::marker::NoSend,
     i: Arc<EngineInternal>,
     held: Vec<HeldProp>
 }
@@ -101,7 +101,6 @@ impl Engine {
         });
 
         Engine {
-            nosend: ::std::kinds::marker::NoSend,
             i: i,
             held: vec![]
         }
@@ -116,7 +115,6 @@ impl Engine {
         });
 
         Engine {
-            nosend: ::std::kinds::marker::NoSend,
             i: i,
             held: vec![]
         }
@@ -150,7 +148,7 @@ impl Engine {
     pub fn set_property<T: Object>(&mut self, name: &str, obj: T) {
         unsafe {
             let mo = obj.qt_metaobject().p;
-            let mut boxed = box PropHdr { qobj: std::ptr::null_mut(), obj: obj };
+            let mut boxed = Box::new(PropHdr { qobj: std::ptr::null_mut(), obj: obj });
             let qobj = ffi::qmlrs_metaobject_instantiate(
                 mo, slot_handler::<T>, &mut *boxed as *mut PropHdr<T> as *mut c_void);
 

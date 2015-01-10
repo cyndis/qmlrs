@@ -5,10 +5,13 @@ macro_rules! Q_OBJECT(
             $(
                 slot fn $name:ident ( $($at:ty),* );
             )*
+/*
             $(
                 signal fn $sname:ident ( );
             )*
+*/
     ) => (
+/*
         impl $t {
             #[allow(dead_code, unused_mut, unused_variables, unused_assignments)]
             fn __qmlrs_signal_id(&self, name: &str) -> u32 {
@@ -29,13 +32,16 @@ macro_rules! Q_OBJECT(
                 }
             )+
         }
+*/
         impl qmlrs::Object for $t {
             #[allow(unused_mut, unused_variables)]
             fn qt_metaobject(&self) -> qmlrs::MetaObject {
                 let x = qmlrs::MetaObject::new();
+/*
                 $(
                     let x = x.signal(stringify!($sname), 0);
                 )+
+*/
                 $(
                     let mut argc = 0;
                     $(
@@ -51,10 +57,12 @@ macro_rules! Q_OBJECT(
             fn qt_metacall(&mut self, slot: i32, args: *const *const qmlrs::OpaqueQVariant) {
                 use qmlrs::ToQVariant;
                 let mut i = 0;
+/*
                 $(
                     let _ = stringify!($sname);
                     i += 1;
                 )+
+*/
                 $(
                     if i == slot {
                         let mut argi = 1u8; /* 0 is for return value */
@@ -62,7 +70,7 @@ macro_rules! Q_OBJECT(
                             $(
                                 {
                                     let _: $at;
-                                    match qmlrs::FromQVariant::from_qvariant(unsafe { *args.offset(argi as int) }) {
+                                    match qmlrs::FromQVariant::from_qvariant(unsafe { *args.offset(argi as isize) }) {
                                         Some(arg) => { argi += 1; arg }
                                         None      => {
                                             println!("qmlrs: Invalid argument {} type for slot {}", argi, stringify!($name));

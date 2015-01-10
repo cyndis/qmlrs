@@ -1,9 +1,9 @@
-use libc::{c_char, c_int, c_uint};
+use libc::{c_char, c_uint};
 use ffi;
 use ffi::{QVariant, QrsVariantType};
 
 pub enum Variant {
-    Int(int),
+    I64(i64),
     String(String),
 }
 
@@ -11,13 +11,13 @@ pub trait FromQVariant {
     fn from_qvariant(arg: *const QVariant) -> Option<Self>;
 }
 
-impl FromQVariant for int {
-    fn from_qvariant(var: *const QVariant) -> Option<int> {
+impl FromQVariant for i64 {
+    fn from_qvariant(var: *const QVariant) -> Option<i64> {
         unsafe {
-            if ffi::qmlrs_variant_get_type(var) == QrsVariantType::Int {
-                let mut x: c_int = 0;
-                ffi::qmlrs_variant_get_int(var, &mut x);
-                Some(x as int)
+            if ffi::qmlrs_variant_get_type(var) == QrsVariantType::Int64 {
+                let mut x: i64 = 0;
+                ffi::qmlrs_variant_get_int64(var, &mut x);
+                Some(x)
             } else {
                 None
             }
@@ -32,9 +32,9 @@ impl FromQVariant for String {
                 let mut len: c_uint = 0;
                 ffi::qmlrs_variant_get_string_length(var, &mut len);
 
-                let mut data: Vec<u8> = Vec::with_capacity(len as uint);
+                let mut data: Vec<u8> = Vec::with_capacity(len as usize);
                 ffi::qmlrs_variant_get_string_data(var, data.as_mut_ptr() as *mut c_char);
-                data.set_len(len as uint);
+                data.set_len(len as usize);
 
                 Some(String::from_utf8_unchecked(data))
             } else {
@@ -46,11 +46,12 @@ impl FromQVariant for String {
 
 impl FromQVariant for Variant {
     fn from_qvariant(var: *const QVariant) -> Option<Variant> {
+        use ffi::QrsVariantType::*;
         unsafe {
             match ffi::qmlrs_variant_get_type(var) {
-                QrsVariantType::Int =>
-                    Some(Variant::Int(FromQVariant::from_qvariant(var).unwrap())),
-                QrsVariantType::String =>
+                Int64 =>
+                    Some(Variant::I64(FromQVariant::from_qvariant(var).unwrap())),
+                String =>
                     Some(Variant::String(FromQVariant::from_qvariant(var).unwrap())),
                 _ => None
             }
@@ -70,13 +71,27 @@ impl ToQVariant for () {
     }
 }
 
-impl ToQVariant for int {
+impl ToQVariant for i64 {
     fn to_qvariant(&self, var: *mut QVariant) {
         unsafe {
-            ffi::qmlrs_variant_set_int(var, *self as c_int);
+            ffi::qmlrs_variant_set_int64(var, *self);
         }
     }
 }
+
+macro_rules! int_toqvar {
+    ($($t:ty)*) => (
+        $(
+        impl ToQVariant for $t {
+            fn to_qvariant(&self, var: *mut QVariant) {
+                (*self as i64).to_qvariant(var);
+            }
+        }
+        )*
+    )
+}
+
+int_toqvar!(u8 u16 u32 i8 i16 i32 isize);
 
 impl ToQVariant for str {
     fn to_qvariant(&self, var: *mut QVariant) {
@@ -90,7 +105,7 @@ impl ToQVariant for str {
 impl ToQVariant for Variant {
     fn to_qvariant(&self, var: *mut QVariant) {
         match *self {
-            Variant::Int(ref x) => x.to_qvariant(var),
+            Variant::I64(ref x) => x.to_qvariant(var),
             Variant::String(ref s) => s.to_qvariant(var),
         }
     }

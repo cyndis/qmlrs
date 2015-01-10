@@ -47,8 +47,10 @@ ApplicationWindow {
     resultArea.text = factorial.calculate(num);
   }
 
+/*
   Connections {
     target: factorial
     onTest: console.log("Got test signal!")
   }
+*/
 }

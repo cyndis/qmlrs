@@ -30,22 +30,20 @@ This is the Rust code for an application allowing the calculation of factorials.
 You can find the corresponding Qml code in the `examples` directory.
 
 ```rust
-#![feature(phase)]
+#![allow(unstable)]
 
-#[phase(plugin, link)]
+#[macro_use]
 extern crate qmlrs;
 
 struct Factorial;
 impl Factorial {
-    fn calculate(&self, x: int) -> int {
-        self.test();
+    fn calculate(&self, x: i64) -> i64 {
         std::iter::range_inclusive(1, x).fold(1, |t,c| t * c)
     }
 }
 
 Q_OBJECT! { Factorial:
-    slot fn calculate(int);
-    signal fn test();
+    slot fn calculate(i64);
 }
 
 fn main() {
