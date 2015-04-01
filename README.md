@@ -33,7 +33,7 @@ This is the Rust code for an application allowing the calculation of factorials.
 You can find the corresponding Qml code in the `examples` directory.
 
 ```rust
-#![allow(unstable)]
+#![feature(core)]
 
 #[macro_use]
 extern crate qmlrs;
@@ -53,7 +53,7 @@ fn main() {
     let mut engine = qmlrs::Engine::new();
 
     engine.set_property("factorial", Factorial);
-    engine.load_local_file(&Path::new("examples/factorial_ui.qml"));
+    engine.load_local_file("examples/factorial_ui.qml");
 
     engine.exec();
 }
