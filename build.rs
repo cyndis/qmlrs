@@ -1,27 +1,25 @@
-extern crate "pkg-config" as pkg_config;
+#![feature(convert)]
 
-use std::old_io::Command;
-use std::os;
+extern crate pkg_config;
 
-#[allow(unused_must_use)]
+use std::process::Command;
+use std::fs;
+use std::env;
+use std::path::PathBuf;
+
 fn main() {
-    let mut build = os::getcwd().unwrap();
-    build.push_many(&["ext", "libqmlrswrapper", "build"]);
+    let wcd = env::current_dir().unwrap();
+    let build = PathBuf::from(&wcd.join("ext/libqmlrswrapper/build"));
 
-    /* Ignore error, the return value is not reliable and we'll catch it when chdir'ing anyway. */
-    std::old_io::fs::mkdir(&build, std::old_io::USER_RWX);
+    let _ = fs::create_dir_all(&build);
 
-    os::change_dir(&build).ok().expect("Failed to change into build directory");
+    Command::new("cmake").arg("..").current_dir(&build).output().unwrap_or_else(|e| {
+        panic!("Failed to run cmake: {}", e);
+    });
 
-    let out = Command::new("cmake").arg("..").output();
-    if out.unwrap().status != std::old_io::process::ProcessExit::ExitStatus(0) {
-        panic!("Failed to run cmake");
-    }
-
-    let out = Command::new("make").output();
-    if out.unwrap().status != std::old_io::process::ProcessExit::ExitStatus(0) {
-        panic!("Failed to run make");
-    }
+    Command::new("make").current_dir(&build).output().unwrap_or_else(|e| {
+        panic!("Failed to run make: {}", e);
+    });
 
     println!("cargo:rustc-flags=-L {} -l qmlrswrapper:static -l stdc++", build.display());
     pkg_config::find_library("Qt5Core Qt5Gui Qt5Qml Qt5Quick").unwrap();

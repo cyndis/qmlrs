@@ -1,11 +1,12 @@
-#![allow(unstable)]
-#![feature(unboxed_closures, unsafe_destructor)]
+#![feature(unboxed_closures, unsafe_destructor, libc, convert)]
 
 extern crate libc;
 
 use libc::{c_char, c_int, c_uint, c_void};
 use std::sync::Arc;
 use ffi::{QVariant, QrsEngine, QObject};
+use std::path::Path;
+use std::convert::AsRef;
 
 /* Re-exports */
 
@@ -53,27 +54,8 @@ impl Drop for EngineInternal {
     }
 }
 
-struct HeldProp {
-    p: *mut (),
-    qp: *mut ffi::QObject,
-    ty: *const std::intrinsics::TyDesc
-}
-
 pub struct Engine {
     i: Arc<EngineInternal>,
-    held: Vec<HeldProp>
-}
-
-#[unsafe_destructor]
-impl Drop for Engine {
-    fn drop(&mut self) {
-        for held in self.held.iter() {
-            unsafe {
-                ((*held.ty).drop_glue)(std::mem::transmute(&held.p));
-                ffi::qmlrs_object_destroy(held.qp);
-            }
-        }
-    }
 }
 
 #[packed]
@@ -101,8 +83,7 @@ impl Engine {
         });
 
         Engine {
-            i: i,
-            held: vec![]
+            i: i
         }
     }
 
@@ -115,8 +96,7 @@ impl Engine {
         });
 
         Engine {
-            i: i,
-            held: vec![]
+            i: i
         }
     }
 
@@ -127,12 +107,10 @@ impl Engine {
         }
     }
 
-    pub fn load_local_file(&mut self, name: &Path) {
-        let mut path = std::os::getcwd().unwrap();
-        path.push(name);
-        path = std::os::make_absolute(&path).unwrap();
+    pub fn load_local_file<P: AsRef<Path>>(&mut self, name: P) {
+        let path = std::env::current_dir().unwrap().join(name);
 
-        self.load_url(format!("file://{}", path.display()).as_slice());
+        self.load_url(&format!("file://{}", path.display()));
     }
 
     pub fn exec(self) {
@@ -156,10 +134,6 @@ impl Engine {
 
             ffi::qmlrs_engine_set_property(self.i.p, name.as_ptr() as *const c_char,
                                            name.len() as c_uint, qobj);
-
-            /* Uhh.. */
-            self.held.push(HeldProp { p: &mut *boxed as *mut PropHdr<T> as *mut (), qp: qobj,
-                                      ty: std::intrinsics::get_tydesc::<Box<T>>() });
 
             std::mem::forget(boxed);
         }
