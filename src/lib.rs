@@ -109,9 +109,9 @@ impl Engine {
         let path_raw = std::env::current_dir().unwrap().join(name);
         let path
             = if cfg!(windows) {
-                format!("/{}",path_raw.display())
+                format!("file:///{}",path_raw.display())
             } else {
-                format!("{}",path_raw.display())
+                format!("file://{}",path_raw.display())
             } ;
         self.load_url(&path);
     }
