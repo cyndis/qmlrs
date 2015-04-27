@@ -6,7 +6,6 @@ qmlrs allows the use of Qml/QtQuick code from Rust, specifically
 
 - Rust code can create a QtQuick engine (QQmlApplicationEngine) with a loaded Qml script
 - Qml code can invoke Rust functions
-- Qml code can connect to signals defined in Rust
 
 ..with certain limitations. The library should be safe (as in not `unsafe`) to use, but no promises
 at this time. Reviews of the code would be welcome.
@@ -19,12 +18,6 @@ Your Qt5 installation should have at least the following modules: Core, Gui, Qml
 
 If you are installing Qt5 from source, please note that passing "-noaccessibility" to the configure
 script disables the qtquickcontrols module.
-
-## Current limitations
-
-- The Engine holds ownership of all properties and signal emission requires a reference to one.
-  This means that signals can currently only be emitted from slot handlers making them not very
-  useful.
 
 ## Example
 
@@ -66,12 +59,6 @@ Creating an `Engine` automatically initializes the Qt main event loop if one doe
 At least on some operating systems, the event loop must run on the main thread. Qt will tell you
 if you mess up. The `.exec()` method on views starts the event loop. This will block the thread
 until the window is closed.
-
-Qt objects have a thread affinity, and their methods must be called on the thread they were created
-on. For this reason, `Engine`s are `NoSend`. However, you can create sendable handles using the `.handle()`
-method (the name "handle" probably should change). Handles have built-in logic to allow invoking
-Qml methods from other threads, but they will not keep the `Engine` alive. Method calls will return
-an error if the underlying `Engine` has been destroyed.
 
 ## Licensing
 
