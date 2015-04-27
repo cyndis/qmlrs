@@ -1,5 +1,3 @@
-#![feature(unboxed_closures, unsafe_destructor, libc, convert)]
-
 extern crate libc;
 
 use libc::{c_char, c_int, c_uint, c_void};
@@ -108,9 +106,14 @@ impl Engine {
     }
 
     pub fn load_local_file<P: AsRef<Path>>(&mut self, name: P) {
-        let path = std::env::current_dir().unwrap().join(name);
-
-        self.load_url(&format!("file://{}", path.display()));
+        let path_raw = std::env::current_dir().unwrap().join(name);
+        let path
+            = if cfg!(windows) {
+                format!("file:///{}",path_raw.display())
+            } else {
+                format!("file://{}",path_raw.display())
+            } ;
+        self.load_url(&path);
     }
 
     pub fn exec(self) {
