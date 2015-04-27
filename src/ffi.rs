@@ -9,7 +9,7 @@ pub enum QVariant {}
 pub enum QVariantList {}
 
 #[repr(C)]
-#[derive(Eq, PartialEq, Debug, Copy)]
+#[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum QrsVariantType {
     Invalid = 0,
     Int64,

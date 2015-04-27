@@ -1,5 +1,3 @@
-#![feature(convert)]
-
 extern crate pkg_config;
 
 use std::process::Command;
@@ -13,7 +11,12 @@ fn main() {
 
     let _ = fs::create_dir_all(&build);
 
-    Command::new("cmake").arg("..").current_dir(&build).output().unwrap_or_else(|e| {
+    let mut myargs = vec![".."] ;
+    let is_msys = env::var("MSYSTEM").is_ok() ;
+    if cfg!(windows) && is_msys {
+        myargs.push("-GMSYS Makefiles") ;
+    }
+    Command::new("cmake").args(&myargs).current_dir(&build).output().unwrap_or_else(|e| {
         panic!("Failed to run cmake: {}", e);
     });
 
@@ -21,6 +24,11 @@ fn main() {
         panic!("Failed to run make: {}", e);
     });
 
-    println!("cargo:rustc-flags=-L {} -l qmlrswrapper -l stdc++", build.display());
+    if cfg!(windows) && is_msys {
+        println!("cargo:rustc-link-search=native={}\\system32",env::var("WINDIR").unwrap());
+    }
+    println!("cargo:rustc-link-lib=static=qmlrswrapper");
+    println!("cargo:rustc-link-lib=dylib=stdc++");
+    println!("cargo:rustc-link-search=native={}",build.display());
     pkg_config::find_library("Qt5Core Qt5Gui Qt5Qml Qt5Quick").unwrap();
 }
