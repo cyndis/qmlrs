@@ -52,7 +52,7 @@ fn main() {
 }
 
 ```
-To run the above example, type: `cargo run --example factorial`.
+To run the above example, execute: `cargo run --example factorial` in the projetcs root directory.
 
 ## Note regarding the Qt event loop and threads
 
