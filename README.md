@@ -52,6 +52,7 @@ fn main() {
 }
 
 ```
+To run the above example, type: `cargo run --example factorial`.
 
 ## Note regarding the Qt event loop and threads
 
