@@ -23,6 +23,7 @@ extern "C" {
     pub fn qmlrs_create_engine_headless() -> *mut QrsEngine;
     pub fn qmlrs_destroy_engine(engine: *mut QrsEngine);
     pub fn qmlrs_engine_load_url(engine: *mut QrsEngine, path: *const c_char, len: c_uint);
+    pub fn qmlrs_engine_load_from_data(engine: *mut QrsEngine, data: *const c_char, len: c_uint);
     pub fn qmlrs_engine_invoke(engine: *mut QrsEngine, method: *const c_char, result: *mut QVariant,
                                args: *const QVariantList);
     pub fn qmlrs_engine_set_property(engine: *mut QrsEngine, name: *const c_char, len: c_uint,
