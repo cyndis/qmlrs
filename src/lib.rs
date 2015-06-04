@@ -105,6 +105,15 @@ impl Engine {
         }
     }
 
+    pub fn load_data(&mut self, data: &str) {
+        unsafe {
+            ffi::qmlrs_engine_load_from_data(self.i.p, data.as_ptr() as *const c_char,
+                                             data.len() as c_uint);
+        }
+    }
+
+
+
     pub fn load_local_file<P: AsRef<Path>>(&mut self, name: P) {
         let path_raw = std::env::current_dir().unwrap().join(name);
         let path
