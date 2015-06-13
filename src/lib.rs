@@ -56,7 +56,7 @@ pub struct Engine {
     i: Arc<EngineInternal>,
 }
 
-#[packed]
+#[repr(packed)]
 struct PropHdr<T: Object> {
     qobj: *mut QObject,
     obj: T
