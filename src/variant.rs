@@ -4,6 +4,7 @@ use ffi::{QVariant, QrsVariantType};
 
 pub enum Variant {
     I64(i64),
+    Bool(bool),
     String(String),
 }
 
@@ -17,6 +18,20 @@ impl FromQVariant for i64 {
             if ffi::qmlrs_variant_get_type(var) == QrsVariantType::Int64 {
                 let mut x: i64 = 0;
                 ffi::qmlrs_variant_get_int64(var, &mut x);
+                Some(x)
+            } else {
+                None
+            }
+        }
+    }
+}
+
+impl FromQVariant for bool {
+    fn from_qvariant(var: *const QVariant) -> Option<bool> {
+        unsafe {
+            if ffi::qmlrs_variant_get_type(var) == QrsVariantType::Bool {
+                let mut x: bool = false;
+                ffi::qmlrs_variant_get_bool(var, &mut x);
                 Some(x)
             } else {
                 None
@@ -51,6 +66,8 @@ impl FromQVariant for Variant {
             match ffi::qmlrs_variant_get_type(var) {
                 Int64 =>
                     Some(Variant::I64(FromQVariant::from_qvariant(var).unwrap())),
+                Bool =>
+                    Some(Variant::Bool(FromQVariant::from_qvariant(var).unwrap())),
                 String =>
                     Some(Variant::String(FromQVariant::from_qvariant(var).unwrap())),
                 _ => None
@@ -75,6 +92,14 @@ impl ToQVariant for i64 {
     fn to_qvariant(&self, var: *mut QVariant) {
         unsafe {
             ffi::qmlrs_variant_set_int64(var, *self);
+        }
+    }
+}
+
+impl ToQVariant for bool {
+    fn to_qvariant(&self, var: *mut QVariant) {
+        unsafe {
+            ffi::qmlrs_variant_set_bool(var, *self);
         }
     }
 }
@@ -106,6 +131,7 @@ impl ToQVariant for Variant {
     fn to_qvariant(&self, var: *mut QVariant) {
         match *self {
             Variant::I64(ref x) => x.to_qvariant(var),
+            Variant::Bool(ref x) => x.to_qvariant(var),
             Variant::String(ref s) => s.to_qvariant(var),
         }
     }
