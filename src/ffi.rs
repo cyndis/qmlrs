@@ -12,6 +12,7 @@ pub enum QVariantList {}
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum QrsVariantType {
     Invalid = 0,
+    Bool,
     Int64,
     String
 }
@@ -32,10 +33,12 @@ extern "C" {
     pub fn qmlrs_variant_create() -> *mut QVariant;
     pub fn qmlrs_variant_destroy(v: *mut QVariant);
     pub fn qmlrs_variant_set_int64(var: *mut QVariant, x: i64);
+    pub fn qmlrs_variant_set_bool(var: *mut QVariant, x: bool);
     pub fn qmlrs_variant_set_invalid(var: *mut QVariant);
     pub fn qmlrs_variant_set_string(var: *mut QVariant, len: c_uint, data: *const c_char);
     pub fn qmlrs_variant_get_type(var: *const QVariant) -> QrsVariantType;
     pub fn qmlrs_variant_get_int64(var: *const QVariant, x: *mut i64);
+    pub fn qmlrs_variant_get_bool(var: *const QVariant, x: *mut bool);
     pub fn qmlrs_variant_get_string_length(var: *const QVariant, out: *mut c_uint);
     pub fn qmlrs_variant_get_string_data(var: *const QVariant, out: *mut c_char);
 
