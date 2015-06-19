@@ -1,4 +1,4 @@
-# qmlrs - QtQuick bindings for Rust
+# qmlrs - [QtQuick](http://doc.qt.io/qt-5/qtquick-index.html) bindings for Rust
 
 ![Image of example](https://raw.githubusercontent.com/cyndis/qmlrs/ghstatic/screenshot.png)
 
