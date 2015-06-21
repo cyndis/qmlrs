@@ -1,4 +1,4 @@
-# qmlrs - QtQuick bindings for Rust
+# qmlrs - [QtQuick](http://doc.qt.io/qt-5/qtquick-index.html) bindings for Rust
 
 ![Image of example](https://raw.githubusercontent.com/cyndis/qmlrs/ghstatic/screenshot.png)
 
@@ -18,6 +18,13 @@ Your Qt5 installation should have at least the following modules: Core, Gui, Qml
 
 If you are installing Qt5 from source, please note that passing "-noaccessibility" to the configure
 script disables the qtquickcontrols module.
+
+## Usage
+
+If you want to use qmlrs add the following lines to your _Cargo.toml_:
+
+	[dependencies.qmlrs]
+	git = "git://github.com/cyndis/qmlrs.git"
 
 ## Example
 
