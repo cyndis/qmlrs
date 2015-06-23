@@ -12,8 +12,8 @@ pub enum QVariantList {}
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum QrsVariantType {
     Invalid = 0,
-    Bool,
     Int64,
+    Bool,
     String
 }
 
