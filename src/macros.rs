@@ -78,7 +78,7 @@ macro_rules! Q_OBJECT(
                                         }
                                     }
                                 }
-                            )*
+                            ),*
                         );
                         ret.to_qvariant(unsafe { *args.offset(0) as *mut qmlrs::OpaqueQVariant });
                         return
