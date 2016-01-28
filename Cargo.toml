@@ -10,5 +10,5 @@ build = "build.rs"
 [dependencies]
 libc = "*"
 
-[build-dependencies.pkg-config]
-git = "https://github.com/alexcrichton/pkg-config-rs"
+[build-dependencies]
+pkg-config = "0.3.6"

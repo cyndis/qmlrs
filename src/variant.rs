@@ -9,7 +9,7 @@ pub enum Variant {
 }
 
 pub trait FromQVariant {
-    fn from_qvariant(arg: *const QVariant) -> Option<Self>;
+    fn from_qvariant(arg: *const QVariant) -> Option<Self> where Self: Sized;
 }
 
 impl FromQVariant for i64 {

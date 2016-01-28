@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate qmlrs;
 
-use std::fs::File;
-use std::io::prelude::*;
+// use std::fs::File;
+// use std::io::prelude::*;
 
 struct Factorial;
 impl Factorial {
@@ -25,13 +25,13 @@ fn main() {
     engine.exec();
 
     // test with string:
-    let mut engine2 = qmlrs::Engine::new();
-    engine2.set_property("factorial", Factorial);
-    let mut qml_file = File::open("examples/factorial_ui.qml").unwrap();
-    let mut qml_string = String::new();
-    qml_file.read_to_string(&mut qml_string).unwrap();
-    qml_string = qml_string.replace("Factorial", "Factorial (from string)");
-    engine2.load_data(&qml_string);
+    // let mut engine2 = qmlrs::Engine::new();
+    // engine2.set_property("factorial", Factorial);
+    // let mut qml_file = File::open("examples/factorial_ui.qml").unwrap();
+    // let mut qml_string = String::new();
+    // qml_file.read_to_string(&mut qml_string).unwrap();
+    // qml_string = qml_string.replace("Factorial", "Factorial (from string)");
+    // engine2.load_data(&qml_string);
 
-    engine2.exec();
+    // engine2.exec();
 }
