@@ -75,4 +75,4 @@ until the window is closed.
 ## Licensing
 
 The code in this library is dual-licensed under the MIT license and the Apache License (version 2.0).
-See LICENSE-APACHE and LICENSE-MIT for details.
+See [LICENSE-APACHE](./LICENSE-APACHE) and [LICENSE-MIT](./LICENSE-MIT) for details.
