@@ -1,22 +1,16 @@
 #[macro_use]
 extern crate qmlrs;
+mod math;
 
-struct Factorial;
-impl Factorial {
-    fn calculate(&self, x: i64) -> i64 {
-        (1..x+1).fold(1, |t,c| t * c)
-    }
-}
-
-Q_OBJECT! { Factorial:
+Q_OBJECT! { math::Factorial:
     slot fn calculate(i64);
-//    signal fn test();
+    //    signal fn test();
 }
 
 fn main() {
     let mut engine = qmlrs::Engine::new();
 
-    engine.set_property("factorial", Factorial);
+    engine.set_property("factorial", math::Factorial);
     engine.load_local_file("examples/factorial_ui.qml");
 
     engine.exec();
