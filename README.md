@@ -1,6 +1,8 @@
 # qmlrs - [QtQuick](http://doc.qt.io/qt-5/qtquick-index.html) bindings for Rust
 
 [![Travis Build Status](https://travis-ci.org/cyndis/qmlrs.svg?branch=master)](https://travis-ci.org/cyndis/qmlrs)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE-MIT)
+[![Apache licensed](https://img.shields.io/badge/license-Apache-blue.svg)](./LICENSE-APACHE)
 
 ![Image of example](https://raw.githubusercontent.com/cyndis/qmlrs/ghstatic/screenshot.png)
 
