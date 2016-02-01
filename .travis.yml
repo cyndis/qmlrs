@@ -1,5 +1,23 @@
+sudo: required
+dist: trusty
+
 language: rust
+rust:
+  - stable
+  - beta
+  - nightly
+matrix:
+  allow_failures:
+    - rust: nightly
+
 install:
-  - sudo add-apt-repository "deb mirror://mirrors.ubuntu.com/mirrors.txt trusty main restricted universe multiverse" -y
   - sudo apt-get update -qq
-  - sudo apt-get install -qq libqt5core5a libqt5gui5 libqt5quick5 libqt5qml5 qtbase5-dev qtdeclarative5-dev cmake
+  - sudo apt-get install -qq qtbase5-dev libqt5gui5 libqt5quick5 libqt5qml5 qtdeclarative5-dev qtdeclarative5-qtquick2-plugin cmake
+
+script:
+  - cargo build --verbose
+  - cargo build --example factorial
+  - cargo build --example factorial_string
+  - cargo build --example multiply
+  # --nocapture to stop cargo from hiding stdout of tests, useful when strange things happen and tests run forever.
+  - cargo test --verbose -- --nocapture
