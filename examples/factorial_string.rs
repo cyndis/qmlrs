@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate qmlrs;
 mod math;
-mod math_objects;
 
 use std::fs::File;
 use std::io::prelude::*;
