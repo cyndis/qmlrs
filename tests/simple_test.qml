@@ -2,8 +2,12 @@ import QtQuick 2.2
 
 Item {
   Timer {
-    interval: 0
+    // 0ms (firing instantly) confuses travis CI, therefore 50ms
+    interval: 50
     running: true
-    onTriggered: Qt.quit();
+    onTriggered: {
+      console.debug("Test timer triggered!");
+      Qt.quit();
+    }
   }
 }
