@@ -14,7 +14,7 @@ Q_OBJECT! { Factorial:
 }
 
 fn main() {
-    let engine = qmlrs::Engine::new();
+    let mut engine = qmlrs::Engine::new();
 
     engine.set_property("factorial", Factorial);
     engine.load_local_file("examples/factorial_ui.qml");
