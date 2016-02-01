@@ -1,11 +1,7 @@
 #[macro_use]
 extern crate qmlrs;
 mod math;
-
-Q_OBJECT! { math::Factorial:
-    slot fn calculate(i64);
-    //    signal fn test();
-}
+mod math_objects;
 
 fn main() {
     let mut engine = qmlrs::Engine::new();
