@@ -1,5 +1,7 @@
-sudo: required
+# qmlrs needs the Ubuntu 14.04 trusty beta image to get a recent Qt5 (trusty ships with Qt 5.2)
 dist: trusty
+# the trusty beta is only available as sudo
+sudo: required
 
 language: rust
 rust:
@@ -12,12 +14,29 @@ matrix:
 
 install:
   - sudo apt-get update -qq
+  # requirements of qmlrs
   - sudo apt-get install -qq qtbase5-dev libqt5gui5 libqt5quick5 libqt5qml5 qtdeclarative5-dev qtdeclarative5-qtquick2-plugin cmake
+  # requirements of travis-cargo
+  - sudo apt-get install -qq libcurl4-openssl-dev libelf-dev libdw-dev binutils-dev
+
+
+# travis-cargo is a wrapper around cargo we use for code coverage generation
+# https://github.com/huonw/travis-cargo
+before_script:
+  - |
+      pip install 'travis-cargo<0.2' --user &&
+      export PATH=$HOME/.local/bin:$PATH
 
 script:
   - cargo build --verbose
-  - cargo build --example factorial
-  - cargo build --example factorial_string
-  - cargo build --example multiply
-  # --nocapture to stop cargo from hiding stdout of tests, useful when strange things happen and tests run forever.
-  - cargo test --verbose -- --nocapture
+  - cargo build --verbose --example factorial
+  - cargo build --verbose --example factorial_string
+  - cargo build --verbose --example multiply
+  # this is to stop cargo from hiding stdout of tests, useful when strange things happen and tests run forever.
+  # cargo test -- --nocapture
+  - cargo test --verbose
+  - cargo bench --verbose
+
+after_success:
+  # measure code coverage and upload to coveralls.io
+  - travis-cargo coveralls --no-sudo --verify
