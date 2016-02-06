@@ -4,6 +4,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/cyndis/qmlrs/badge.svg?branch=master)](https://coveralls.io/github/cyndis/qmlrs?branch=master)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE-MIT)
 [![Apache licensed](https://img.shields.io/badge/license-Apache-blue.svg)](./LICENSE-APACHE)
+[![crates.io](https://img.shields.io/crates/v/qmlrs.svg)](https://crates.io/crates/qmlrs)
 
 ![Image of example](https://raw.githubusercontent.com/cyndis/qmlrs/ghstatic/screenshot.png)
 
