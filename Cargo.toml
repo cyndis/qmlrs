@@ -9,7 +9,6 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/cyndis/qmlrs"
 readme = "README.md"
 
-publish = false
 build = "build.rs"
 
 [dependencies]
