@@ -1,10 +1,15 @@
 [package]
-
 name = "qmlrs"
 version = "0.0.1"
 authors = ["Mikko Perttunen <cyndis@kapsi.fi>"]
-license = "MIT/Apache-2.0"
 
+description = "qmlrs - QtQuick bindings for Rust"
+keywords = ["QML", "QtQuick", "Qt", "GUI"]
+license = "MIT/Apache-2.0"
+repository = "https://github.com/cyndis/qmlrs"
+readme = "README.md"
+
+publish = false
 build = "build.rs"
 
 [dependencies]
