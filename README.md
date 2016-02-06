@@ -16,6 +16,10 @@ qmlrs allows the use of QML/QtQuick code from Rust, specifically
 …with certain limitations. The library should be safe (as in not `unsafe`) to use, but no promises
 at this time. Reviews of the code would be welcome.
 
+## News
+
+See the [Changelog](./CHANGELOG.md) for the version history and what's waiting in master to be released.
+
 ## Requirements
 
 The library consists of a Rust part and a C++ part. The C++ part will be compiled automatically
