@@ -14,6 +14,23 @@ fn main() {
 
     let mut myargs = vec![".."] ;
 
+
+    /*
+     * Support Qt installed via the Ports system on BSD-like systems.
+     *
+     * The native libs are in `/usr/local/lib`, which is not linked against by default.
+     * This means that either the user or every package has to add this if they want to link
+     * against something that is not part of the core distribution in `/usr/lib`.
+     *
+     * See https://wiki.freebsd.org/WarnerLosh/UsrLocal for the line of reasoning & how this will
+     * change in the future.
+     */
+    if cfg!(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd",
+                target_os = "dragonfly", target_os = "bitrig")) {
+        println!("cargo:rustc-link-search=native=/usr/local/lib");
+    }
+
+
     /*
      * Prameters for supporting QT on OS X installed via homebres
      *
