@@ -1,6 +1,6 @@
 [package]
 name = "qmlrs"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["Mikko Perttunen <cyndis@kapsi.fi>"]
 
 description = "qmlrs - QtQuick bindings for Rust"
