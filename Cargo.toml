@@ -15,4 +15,4 @@ build = "build.rs"
 libc = "^0.2.6"
 
 [build-dependencies]
-pkg-config = "^0.3.6"
+pkg-config = "^0.3.8"
