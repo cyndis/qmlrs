@@ -45,7 +45,7 @@ extern crate qmlrs;
 struct Factorial;
 impl Factorial {
     fn calculate(&self, x: i64) -> i64 {
-        std::iter::range_inclusive(1, x).fold(1, |t,c| t * c)
+        (1..x+1).fold(1, |t,c| t * c)
     }
 }
 
