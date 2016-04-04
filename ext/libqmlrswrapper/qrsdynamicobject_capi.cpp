@@ -20,7 +20,7 @@ extern "C" void qmlrs_metaobject_add_signal(QrsDynamicMetaObject *mo, const char
     mo->addSignal(QString::fromUtf8(name, name_len), argc);
 }
 
-extern "C" QObject *qmlrs_metaobject_instantiate(QrsDynamicMetaObject *mo, QrsSlotFunction fun, 
+extern "C" QObject *qmlrs_metaobject_instantiate(QrsDynamicMetaObject *mo, QrsSlotFunction fun,
                                                  void *data)
 {
     return mo->create(fun, data);

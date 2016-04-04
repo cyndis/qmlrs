@@ -25,9 +25,9 @@ void QrsDynamicMetaObject::finalize()
     _mo->d.extradata = NULL;
     _mo->d.relatedMetaObjects = NULL;
     _mo->d.static_metacall = qrsStaticDynamicMetacall;
-    
+
     /* Build string data */
-    
+
     struct ArrayData {
         int ref;
         int size;
@@ -38,12 +38,12 @@ void QrsDynamicMetaObject::finalize()
 
     QVector<ArrayData> stringhdr;
     QByteArray stringdata;
-    
+
 #define ADD_STRING_HDR(len) { stringhdr.append(ArrayData { -1, len, 0, 0, \
         qptrdiff(stringdata.size() - stringhdr.size() * sizeof(ArrayData)) }); }
-    
+
     QString classname = "DynamicObject";
-    
+
     ADD_STRING_HDR(classname.size());
     stringdata.append(classname);
     stringdata.append('\0');
@@ -62,19 +62,19 @@ void QrsDynamicMetaObject::finalize()
     }
 
 #undef ADD_STRING_HDR
-    
+
     for (int i = 0; i < stringhdr.size(); ++i) {
         stringhdr[i].offset += stringhdr.size() * sizeof(ArrayData);
     }
-    
+
     char *stringdata_buf = new char[stringhdr.size() * sizeof(ArrayData) + stringdata.size()];
     memcpy(stringdata_buf, stringhdr.constData(), stringhdr.size() * sizeof(ArrayData));
-    memcpy(stringdata_buf + stringhdr.size() * sizeof(ArrayData), stringdata.data(), 
+    memcpy(stringdata_buf + stringhdr.size() * sizeof(ArrayData), stringdata.data(),
            stringdata.size());
     _mo->d.stringdata = (const QByteArrayData *)stringdata_buf;
-    
+
     /* Build metadata */
-    
+
     QVector<uint> metadata;
     metadata.append(7); /* revision */
     metadata.append(0); /* classname string id */
@@ -84,12 +84,12 @@ void QrsDynamicMetaObject::finalize()
     metadata.append(0); metadata.append(0); /* enums */
     metadata.append(0); metadata.append(0); /* constructors */
     metadata.append(0); /* flags */
-    
+
     int n_signals = 0;
     for (int i = 0; i < _methods.size(); ++i)
         if (_methods[i].flags == 0x06) ++n_signals;
     metadata.append(n_signals); /* signals */
-    
+
     metadata[5] = metadata.size(); /* fixup method list offset */
     int str_ptr = 1;
     QList<uint> fixup_offsets;
@@ -102,7 +102,7 @@ void QrsDynamicMetaObject::finalize()
         metadata.append(_methods[i].flags); /* public */
         str_ptr += 2 + _methods[i].args;
     }
-    
+
     str_ptr = 3;
     for (int i = 0; i < _methods.size(); ++i) {
         metadata[fixup_offsets.takeFirst()] = metadata.size();
@@ -115,9 +115,9 @@ void QrsDynamicMetaObject::finalize()
         }
         str_ptr += 2 + _methods[i].args;
     }
-    
+
     metadata.append(0);
-    
+
     uint *metadata_buf = new uint[metadata.size()];
     memcpy(metadata_buf, metadata.constData(), metadata.size() * sizeof(uint));
     _mo->d.data = metadata_buf;
@@ -127,7 +127,7 @@ QObject* QrsDynamicMetaObject::create(QrsSlotFunction fun, void* data)
 {
     if (!_mo)
         finalize();
-    
+
     return new QrsDynamicObject(fun, data, _mo, _methods.size());
 }
 
@@ -149,7 +149,7 @@ void* QrsDynamicObject::qt_metacast(const char* )
 int QrsDynamicObject::qt_metacall(QMetaObject::Call c, int id, void** a)
 {
     id = QObject::qt_metacall(c, id, a);
-    
+
     if (c == QMetaObject::InvokeMetaMethod) {
         if (id < _n_slots) {
             invokeMetacall(id, a);
