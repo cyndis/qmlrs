@@ -2,7 +2,7 @@ extern crate libc;
 
 use libc::{c_char, c_int, c_uint, c_void};
 use std::sync::Arc;
-use ffi::{QVariant, QrsEngine, QObject};
+use ffi::{QrsEngine, QObject};
 use std::path::Path;
 use std::convert::AsRef;
 
